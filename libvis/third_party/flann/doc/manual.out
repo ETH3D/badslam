@@ -1,0 +1,39 @@
+\BOOKMARK [1][-]{section.1}{Introduction}{}% 1
+\BOOKMARK [2][-]{subsection.1.1}{Quick Start}{section.1}% 2
+\BOOKMARK [1][-]{section.2}{Downloading and compiling FLANN}{}% 3
+\BOOKMARK [2][-]{subsection.2.1}{Upgrading from a previous version}{section.2}% 4
+\BOOKMARK [2][-]{subsection.2.2}{Compiling FLANN with multithreading support}{section.2}% 5
+\BOOKMARK [1][-]{section.3}{Using FLANN}{}% 6
+\BOOKMARK [2][-]{subsection.3.1}{Using FLANN from C++}{section.3}% 7
+\BOOKMARK [3][-]{subsubsection.3.1.1}{flann::Index}{subsection.3.1}% 8
+\BOOKMARK [3][-]{subsubsection.3.1.2}{flann::Index::buildIndex}{subsection.3.1}% 9
+\BOOKMARK [3][-]{subsubsection.3.1.3}{flann::Index::addPoints}{subsection.3.1}% 10
+\BOOKMARK [3][-]{subsubsection.3.1.4}{flann::Index::removePoint}{subsection.3.1}% 11
+\BOOKMARK [3][-]{subsubsection.3.1.5}{flann::Index::getPoint}{subsection.3.1}% 12
+\BOOKMARK [3][-]{subsubsection.3.1.6}{flann::Index::knnSearch}{subsection.3.1}% 13
+\BOOKMARK [3][-]{subsubsection.3.1.7}{flann::Index::radiusSearch}{subsection.3.1}% 14
+\BOOKMARK [3][-]{subsubsection.3.1.8}{flann::Index::save}{subsection.3.1}% 15
+\BOOKMARK [3][-]{subsubsection.3.1.9}{flann::hierarchicalClustering}{subsection.3.1}% 16
+\BOOKMARK [3][-]{subsubsection.3.1.10}{flann::KdTreeCuda3dIndex}{subsection.3.1}% 17
+\BOOKMARK [2][-]{subsection.3.2}{Using FLANN from C}{section.3}% 18
+\BOOKMARK [3][-]{subsubsection.3.2.1}{flann\137build\137index\(\)}{subsection.3.2}% 19
+\BOOKMARK [3][-]{subsubsection.3.2.2}{flann\137find\137nearest\137neighbors\137index\(\)}{subsection.3.2}% 20
+\BOOKMARK [3][-]{subsubsection.3.2.3}{flann\137find\137nearest\137neighbors\(\)}{subsection.3.2}% 21
+\BOOKMARK [3][-]{subsubsection.3.2.4}{flann\137radius\137search\(\)}{subsection.3.2}% 22
+\BOOKMARK [3][-]{subsubsection.3.2.5}{flann\137save\137index\(\)}{subsection.3.2}% 23
+\BOOKMARK [3][-]{subsubsection.3.2.6}{flann\137load\137index\(\)}{subsection.3.2}% 24
+\BOOKMARK [3][-]{subsubsection.3.2.7}{flann\137free\137index\(\)}{subsection.3.2}% 25
+\BOOKMARK [3][-]{subsubsection.3.2.8}{flann\137set\137distance\137type}{subsection.3.2}% 26
+\BOOKMARK [3][-]{subsubsection.3.2.9}{flann\137compute\137cluster\137centers\(\)}{subsection.3.2}% 27
+\BOOKMARK [2][-]{subsection.3.3}{Using FLANN from MATLAB}{section.3}% 28
+\BOOKMARK [3][-]{subsubsection.3.3.1}{flann\137build\137index}{subsection.3.3}% 29
+\BOOKMARK [3][-]{subsubsection.3.3.2}{flann\137search}{subsection.3.3}% 30
+\BOOKMARK [3][-]{subsubsection.3.3.3}{flann\137save\137index}{subsection.3.3}% 31
+\BOOKMARK [3][-]{subsubsection.3.3.4}{flann\137load\137index}{subsection.3.3}% 32
+\BOOKMARK [3][-]{subsubsection.3.3.5}{flann\137set\137distance\137type}{subsection.3.3}% 33
+\BOOKMARK [3][-]{subsubsection.3.3.6}{flann\137free\137index}{subsection.3.3}% 34
+\BOOKMARK [3][-]{subsubsection.3.3.7}{Examples}{subsection.3.3}% 35
+\BOOKMARK [3][-]{subsubsection.3.3.8}{Example 1:}{subsection.3.3}% 36
+\BOOKMARK [3][-]{subsubsection.3.3.9}{Example 2:}{subsection.3.3}% 37
+\BOOKMARK [3][-]{subsubsection.3.3.10}{Example 3:}{subsection.3.3}% 38
+\BOOKMARK [2][-]{subsection.3.4}{Using FLANN from python}{section.3}% 39

@@ -1,0 +1,17 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource prefix="/badslam">
+  <file>ba.png</file>
+  <file>badslam.png</file>
+  <file>delete_keyframe.png</file>
+  <file>densify.png</file>
+  <file>kf_step.png</file>
+  <file>pause.png</file>
+  <file>run.png</file>
+  <file>screenshot.png</file>
+  <file>select_keyframe.png</file>
+  <file>settings.png</file>
+  <file>single_step.png</file>
+  <file>single_step_backwards.png</file>
+  <file>skip_frame.png</file>
+</qresource>
+</RCC>

@@ -1,0 +1,10 @@
+\begin{thebibliography}{AV07}
+
+\bibitem[AV07]{arthur_kmeanspp_2007}
+D.~Arthur and S.~Vassilvitskii.
+\newblock k-means++: the advantages of careful seeding.
+\newblock In {\em Proceedings of the eighteenth annual ACM-SIAM symposium on
+  Discrete algorithms}, pages 1027--1035. Society for Industrial and Applied
+  Mathematics Philadelphia, PA, USA, 2007.
+
+\end{thebibliography}

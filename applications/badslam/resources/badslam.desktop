@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=false
+Exec=badslam
+Name=BAD SLAM
+Icon=badslam
+Comment=Bundle-adjusted direct RGB-D SLAM
+Categories=Science;ImageProcessing;
