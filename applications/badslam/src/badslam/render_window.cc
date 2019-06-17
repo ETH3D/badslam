@@ -298,11 +298,7 @@ void BadSlamRenderWindow::Render() {
   
   // Set states for rendering.
   glClearColor(background_color_.x(), background_color_.y(), background_color_.z(), background_color_.w());  // background color
-  // TODO: While it works on Ubuntu 14.04, both on Ubuntu 18.04 and Windows,
-  //       for an unknown reason, multisampling does not work currently.
-  //       Instead, when it was enabled, for some parts of the render window
-  //       the window was semi-translucent, showing the windows behind it.
-  glDisable(GL_MULTISAMPLE);
+  glEnable(GL_MULTISAMPLE);
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
   

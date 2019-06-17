@@ -55,7 +55,7 @@ LibvisApplication::LibvisApplication(int argc, char** argv) {
   }
 }
 
-int LibvisApplication::WrapQtEventLoopAround(int (*func)(int, char**), int argc, char** argv) {
+void LibvisApplication::SetDefaultQSurfaceFormat() {
   // QSurfaceFormat default settings should be set before the QApplication is constructed.
   // TODO: These settings here should be configurable by the application!
   QSurfaceFormat surface_format;
@@ -64,7 +64,9 @@ int LibvisApplication::WrapQtEventLoopAround(int (*func)(int, char**), int argc,
   surface_format.setSamples(4);
   surface_format.setAlphaBufferSize(8);
   QSurfaceFormat::setDefaultFormat(surface_format);
-  
+}
+
+int LibvisApplication::WrapQtEventLoopAround(int (*func)(int, char**), int argc, char** argv) {
   QApplication qapp(argc, argv);
   qapp.setQuitOnLastWindowClosed(false);
   
