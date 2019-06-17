@@ -119,8 +119,14 @@ if (CMAKE_CUDA_COMPILER)
   
   
   # badslam executable.
-  add_executable(badslam
+  set(BADSLAM_SRC
     src/badslam/main.cc
+  )
+  if(MSVC)
+    list(APPEND BADSLAM_SRC resources/badslam.rc)
+  endif()
+  add_executable(badslam
+    ${BADSLAM_SRC}
   )
   target_include_directories(badslam PRIVATE
     src
