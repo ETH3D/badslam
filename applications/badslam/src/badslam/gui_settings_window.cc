@@ -85,6 +85,12 @@ SettingsDialog::SettingsDialog(QString* dataset_path, BadSlamConfig* config, boo
   connect(realsense_button, &QPushButton::clicked, this, &SettingsDialog::RealSenseLiveInputClicked);
   dataset_layout->addWidget(realsense_button);
 #endif
+
+#ifdef HAVE_K4A
+  QPushButton* k4a_button = new QPushButton(tr("K4A live input"));
+  connect(k4a_button, &QPushButton::clicked, this, &SettingsDialog::K4ALiveInputClicked);
+  dataset_layout->addWidget(k4a_button);
+#endif
   
   // TODO: Allow selecting the ground truth trajectory file
   
@@ -307,6 +313,34 @@ SettingsDialog::SettingsDialog(QString* dataset_path, BadSlamConfig* config, boo
   
   depth_preprocessing_layout->setRowStretch(row, 1);
   depth_preprocessing_tab->setLayout(depth_preprocessing_layout);
+
+  // Settings tab: K4A preprocessing
+#ifdef HAVE_K4A
+  QWidget* k4a_tab = new QWidget();
+  QGridLayout* k4a_layout = new QGridLayout();
+  row = 0;
+
+  k4a_mode_edit = new QLineEdit("");
+  add_option(tr("Mode(nfov) (nfov,nfov2x2,wfov,wfov2x2): "), k4a_mode_edit, k4a_layout, &row);
+
+  k4a_fps_edit = new QLineEdit(QString::number(config->k4a_fps));
+  add_option(tr("Fps(30) (30,15,5): "), k4a_fps_edit, k4a_layout, &row);
+
+  k4a_resolution_edit = new QLineEdit(QString::number(config->k4a_resolution));
+  add_option(tr("Resolution(720) (720,1080,1400): "), k4a_resolution_edit, k4a_layout, &row);
+
+  k4a_factor_edit = new QLineEdit(QString::number(config->k4a_factor));
+  add_option(tr("Downscaling factor (1)"), k4a_factor_edit, k4a_layout, &row);
+
+  k4a_use_depth_edit = new QLineEdit(QString::number(config->k4a_use_depth));
+  add_option(tr("Use depth and ir only (0)"), k4a_use_depth_edit, k4a_layout, &row);
+
+  k4a_exposure_edit = new QLineEdit(QString::number(config->k4a_exposure));
+  add_option(tr("Set exposure in ms(8000)"), k4a_exposure_edit, k4a_layout, &row);
+
+  k4a_layout->setRowStretch(row, 1);
+  k4a_tab->setLayout(k4a_layout);
+#endif
   
   
   // Settings tab widget
@@ -319,6 +353,9 @@ SettingsDialog::SettingsDialog(QString* dataset_path, BadSlamConfig* config, boo
   tab_widget->addTab(ba_tab, tr("Bundle Adjustment"));
   tab_widget->addTab(loop_closure_tab, tr("Loop closure"));
   tab_widget->addTab(memory_tab, tr("Memory"));
+#ifdef HAVE_K4A
+  tab_widget->addTab(k4a_tab, tr("Azure Kinect"));
+#endif
   
   // Action buttons
   QHBoxLayout* buttons_layout = new QHBoxLayout();
@@ -389,6 +426,21 @@ void SettingsDialog::RealSenseLiveInputClicked() {
     use_photometric_residuals_checkbox->setChecked(false);
     bilateral_filter_sigma_inv_depth_edit->setText("0.01");
     max_depth_edit->setText("4");
+    restrict_fps_to_edit->setText("0");
+  }
+}
+void SettingsDialog::K4ALiveInputClicked() {
+  dataset_path_edit->setText("live://k4a");
+
+  if (QMessageBox::question(
+      this,
+      tr("K4A live input"),
+      tr("Set recommended default settings for Azure Kinect live input?"
+         " This will disable descriptor residuals, set --bilateral_filter_sigma_inv_depth to 0.01, set --max_depth to 5, and set --fps_restriction to 0."),
+      QMessageBox::StandardButton::Yes | QMessageBox::StandardButton::No) == QMessageBox::StandardButton::Yes) {
+    use_photometric_residuals_checkbox->setChecked(false);
+    bilateral_filter_sigma_inv_depth_edit->setText("0.01");
+    max_depth_edit->setText("5");
     restrict_fps_to_edit->setText("0");
   }
 }
@@ -551,6 +603,15 @@ bool SettingsDialog::ParseSettings() {
   
   config->bilateral_filter_sigma_inv_depth = bilateral_filter_sigma_inv_depth_edit->text().toDouble(&ok);
   if (!ok) { report_error("bilateral_filter_sigma_inv_depth", bilateral_filter_sigma_inv_depth_edit->text()); return false; }
+
+  // k4a settings
+  // TODO Silvano error check
+  config->k4a_mode = k4a_mode_edit->text().toStdString();
+  config->k4a_fps = k4a_fps_edit->text().toInt(&ok);
+  config->k4a_resolution = k4a_resolution_edit->text().toInt(&ok);
+  config->k4a_factor = k4a_factor_edit->text().toInt(&ok);
+  config->k4a_use_depth = k4a_use_depth_edit->text().toInt(&ok);
+  config->k4a_exposure = k4a_exposure_edit->text().toInt(&ok);
   
   return true;
 }

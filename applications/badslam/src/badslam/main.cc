@@ -444,16 +444,21 @@ int LIBVIS_QT_MAIN(int argc, char** argv) {
         window_default_width,
         window_default_height);
     return EXIT_SUCCESS;
-  }
-  else if (dataset_folder_path == "live://realsense") {
+  } else if (dataset_folder_path == "live://realsense") {
     rs_input.Start(&rgbd_video, &depth_scaling);
     live_input = 1;
-  }
-  else if (dataset_folder_path == "live://k4a") {
-    k4a_input.Start(&rgbd_video, &depth_scaling);
+  } else if (dataset_folder_path == "live://k4a") {
+    k4a_input.Start(&rgbd_video, 
+        &depth_scaling, 
+        bad_slam_config.k4a_fps,
+        bad_slam_config.k4a_resolution, 
+        bad_slam_config.k4a_factor,
+        bad_slam_config.k4a_use_depth,
+        bad_slam_config.k4a_mode,
+        bad_slam_config.k4a_exposure
+    );
     live_input = 2;
-  }
-  else {
+  } else {
     if (!ReadTUMRGBDDatasetAssociatedAndCalibrated(
                 dataset_folder_path.c_str(),
                 trajectory_path.empty() ? nullptr : trajectory_path.c_str(),

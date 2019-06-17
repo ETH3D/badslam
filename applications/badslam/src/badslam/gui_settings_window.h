@@ -54,6 +54,7 @@ class SettingsDialog : public QDialog {
  public slots:
   void ChooseDatasetClicked();
   void RealSenseLiveInputClicked();
+  void K4ALiveInputClicked();
   
   void StartClicked();
   void StartPausedClicked();
@@ -117,6 +118,14 @@ class SettingsDialog : public QDialog {
   QLineEdit* bilateral_filter_sigma_xy_edit;
   QLineEdit* bilateral_filter_radius_factor_edit;
   QLineEdit* bilateral_filter_sigma_inv_depth_edit;
+
+  // K4A settings
+  QLineEdit* k4a_mode_edit;
+  QLineEdit* k4a_fps_edit;
+  QLineEdit* k4a_resolution_edit;
+  QLineEdit* k4a_factor_edit;
+  QLineEdit* k4a_use_depth_edit;
+  QLineEdit* k4a_exposure_edit;
   
   BadSlamConfig* config;
   bool* start_paused;

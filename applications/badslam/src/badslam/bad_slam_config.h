@@ -280,7 +280,30 @@ struct BadSlamConfig {
   static constexpr const char* loop_detection_images_height_help =
       "Height of the images used for loop detection (i.e., the color images).";
   int loop_detection_images_height = -1;
-  
+
+  static constexpr const char* k4a_mode_help = 
+	  "Operating modes for Azure Kinect: nfov,nfov2x2,wfov,wfov2x2 "
+	  "default: (narrow field of view) with resolution 640x576, fov 75°x65° and range 0.5m - 3.86m "
+	  "nfov2x2 was resolution 320x288, fov 75°x65° and range 0.5m - 5.46 "
+	  "wfov (wide field of view) has resolution 1024x1024,fov 120°x120° and range 0.25 - 2.21m "
+	  "wfov2x2  has resolution 512x512,fov 120°x120° and range 0.25 - 2.88m "
+	  "full specs at http://aka.ms/kinectdocs";
+  string k4a_mode = "nfov";
+
+  static constexpr const char* k4a_fps_help 
+	  = "Azure Kinect frame per seconds: 30, 15, 5"
+	  " default: 30, not every combination of mode and resolution supports every fps";
+  int k4a_fps = 30;
+
+  static constexpr const char* k4a_resolution_help = "Azure kinect resolution: default 720, can be 1080,1440,2160,3082,1536";
+  int k4a_resolution = 720;
+
+  static constexpr const char* k4a_factor_help = "Downscaling factor for Azure kinect images";
+  int k4a_factor = 1;
+  static constexpr const char* k4a_use_depth_help = "When using this mode only the depth image plus reflectivity is used, without rgb";
+  int k4a_use_depth = 0;
+  static constexpr const char* k4a_exposure_help = "Exposure for the rgb camera of Azure Kinect, default is 8000ms when 0 it's auto";
+  int k4a_exposure = 8000;
   
   inline float GetLoopDetectionImageFrequency() const {
     return (loop_detection_image_frequency != 0) ?

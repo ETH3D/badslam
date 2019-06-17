@@ -62,10 +62,63 @@ uint32_t K4AInputThread::k4a_convert_fps_to_uint(k4a_fps_t fps) {
   return fps_int;
 }
 
+k4a_fps_t K4AInputThread::k4a_convert_uint_to_fps(int fps) {
+  k4a_fps_t fps_int;
+  switch (fps) {
+  case 5:
+    fps_int = K4A_FRAMES_PER_SECOND_5;
+    break;
+  case 15:
+    fps_int = K4A_FRAMES_PER_SECOND_15;
+    break;
+  case 30:
+    fps_int = K4A_FRAMES_PER_SECOND_30;
+    break;
+  default:
+    fps_int = K4A_FRAMES_PER_SECOND_30;
+    break;
+  }
+  return fps_int;
+}
+
+k4a_depth_mode_t K4AInputThread::k4a_convert_string_to_mode(std::string strmode) {
+  k4a_depth_mode_t mode = K4A_DEPTH_MODE_NFOV_UNBINNED;
+  if (strmode.compare("nfov")) {
+    mode = K4A_DEPTH_MODE_NFOV_2X2BINNED;
+  } else if (strmode.compare("nfov2x2")) {
+    mode = K4A_DEPTH_MODE_NFOV_UNBINNED;
+  } else if (strmode.compare("wfov")) {
+    mode = K4A_DEPTH_MODE_WFOV_UNBINNED;
+  } else if (strmode.compare("wfov2x2")) {
+    mode = K4A_DEPTH_MODE_WFOV_2X2BINNED;
+  }
+  return mode;
+}
+
+k4a_color_resolution_t K4AInputThread::k4a_convert_uint_to_resolution(int fps) {
+  k4a_color_resolution_t fps_int;
+  switch (fps) {
+  case 720:
+    fps_int = K4A_COLOR_RESOLUTION_720P;
+    break;
+  case 1080:
+    fps_int = K4A_COLOR_RESOLUTION_1080P;
+    break;
+  case 1440:
+    fps_int = K4A_COLOR_RESOLUTION_1440P;
+    break;
+  default:
+    fps_int = K4A_COLOR_RESOLUTION_720P;
+    break;
+  }
+  return fps_int;
+}
+
 void K4AInputThread::init_undistortion_map() {
   auto intrinsics = calibration.color_camera_calibration.intrinsics.parameters.param;
-  width = calibration.color_camera_calibration.resolution_width;
-  height = calibration.color_camera_calibration.resolution_height;
+  if (use_depth) {
+    intrinsics = calibration.depth_camera_calibration.intrinsics.parameters.param;
+  }
   
   std::vector<double> _camera_matrix = {
       intrinsics.fx / factor,
@@ -103,8 +156,7 @@ void K4AInputThread::init_undistortion_map() {
       0,
       cv_depth_downscaled.size(),
       0,
-      true
-  );
+      true);
   LOG(INFO) << "Camera matrix is " << camera_matrix;
   LOG(INFO) << "New camera matrix is " << new_camera_matrix;
   
@@ -113,7 +165,7 @@ void K4AInputThread::init_undistortion_map() {
   map1 = cv::Mat::zeros(cv_depth_downscaled.size(), CV_16SC2);
   map2 = cv::Mat::zeros(cv_depth_downscaled.size(), CV_16UC1);
   initUndistortRectifyMap(camera_matrix, dist_coeffs, I, new_camera_matrix, cv::Size(width / factor, height / factor),
-      map1.type(), map1, map2);
+                          map1.type(), map1, map2);
   //LOG(INFO) << "Map1 size is " << map1.size();
   //LOG(INFO) << "map2 size is " << map1.size();
 }
@@ -121,30 +173,30 @@ void K4AInputThread::init_undistortion_map() {
 void K4AInputThread::init_memory() {
   if (K4A_RESULT_SUCCEEDED != k4a_image_create(
       K4A_IMAGE_FORMAT_DEPTH16,
-      calibration.color_camera_calibration.resolution_width,
-      calibration.color_camera_calibration.resolution_height,
-      calibration.color_camera_calibration.resolution_width * (int)sizeof(uint16_t),
+      width,
+      height,
+      width * (int)sizeof(uint16_t),
       &transformed_depth_image)) {
-      LOG(ERROR) << "WARNING: Failed to create transformed depth image!";
+    LOG(ERROR) << "WARNING: Failed to create transformed depth image!";
   }
   
   cv_undistorted_color = cv::Mat::zeros(
-      calibration.color_camera_calibration.resolution_height/factor,
-      calibration.color_camera_calibration.resolution_width/factor,
+      height/factor,
+      width/factor,
       CV_8UC4);
   
   cv_undistorted_depth = cv::Mat::zeros(
-      calibration.color_camera_calibration.resolution_height/factor,
-      calibration.color_camera_calibration.resolution_width/factor,
+      height/factor,
+      width/factor,
       CV_16U);
   
   cv_depth_downscaled = cv::Mat::zeros(
-      calibration.color_camera_calibration.resolution_height/factor,
-      calibration.color_camera_calibration.resolution_width/factor,
+      height/factor,
+      width/factor,
         CV_16U);
   cv_color_downscaled = cv::Mat::zeros(
-      calibration.color_camera_calibration.resolution_height/factor,
-      calibration.color_camera_calibration.resolution_width/factor,
+      height/factor,
+      width/factor,
       CV_8UC4);
 }
 
@@ -164,7 +216,8 @@ void print_extrinsic(k4a_calibration_extrinsics_t *extrinsics) {
       extrinsics->rotation[7],
       extrinsics->rotation[8]);
   printf("t:\n");
-  printf("%.10f %.10f %.10f\n",
+  printf(
+      "%.10f %.10f %.10f\n",
       extrinsics->translation[0],
       extrinsics->translation[1],
       extrinsics->translation[2]);
@@ -204,8 +257,19 @@ static void print_calibration(k4a_calibration_camera_t *calibration) {
   printf("\n");
 }
 
-void K4AInputThread::Start(RGBDVideo<Vec3u8, u16>* rgbd_video, float* depth_scaling) {
+void K4AInputThread::Start(
+    RGBDVideo<Vec3u8, u16>* rgbd_video, float* depth_scaling,
+    int fps, int resolution, int _factor,
+    int _use_depth,string mode, int exposure) {
+  LOG(INFO) << fps;
+  LOG(INFO) << resolution;
+  LOG(INFO) << _factor;
+  LOG(INFO) << _use_depth;
+  factor = _factor;
   rgbd_video_ = rgbd_video;
+  if (_use_depth != 0) {
+    use_depth = true;
+  }
   LOG(INFO) << "depth scaling " << *depth_scaling;
   //factor = *depth_scaling;
   
@@ -221,13 +285,16 @@ void K4AInputThread::Start(RGBDVideo<Vec3u8, u16>* rgbd_video, float* depth_scal
     return;
   }
   
-  config.camera_fps = K4A_FRAMES_PER_SECOND_30;
+  config.camera_fps = k4a_convert_uint_to_fps(fps);
   //config.color_format = K4A_IMAGE_FORMAT_COLOR_BGRA32;
   config.color_format = K4A_IMAGE_FORMAT_COLOR_MJPG;
   //config.color_format = K4A_IMAGE_FORMAT_COLOR_YUY2;
   //config.color_format = K4A_IMAGE_FORMAT_COLOR_NV12;
-  config.color_resolution = K4A_COLOR_RESOLUTION_720P;
-  config.depth_mode = K4A_DEPTH_MODE_WFOV_2X2BINNED;
+  config.color_resolution = k4a_convert_uint_to_resolution(resolution);
+  //config.depth_mode = K4A_DEPTH_MODE_NFOV_2X2BINNED;
+  //config.depth_mode = K4A_DEPTH_MODE_WFOV_UNBINNED;
+  //config.depth_mode = K4A_DEPTH_MODE_WFOV_2X2BINNED;
+  config.depth_mode = k4a_convert_string_to_mode(mode);
   config.synchronized_images_only = true;
   
   if (K4A_RESULT_SUCCEEDED != k4a_device_start_cameras(device, &config)) {
@@ -244,16 +311,26 @@ void K4AInputThread::Start(RGBDVideo<Vec3u8, u16>* rgbd_video, float* depth_scal
   //    K4A_COLOR_CONTROL_MODE_MANUAL,
   //    50);
   
-  K4A_CHECK(k4a_device_set_color_control(
-      device,
-      K4A_COLOR_CONTROL_EXPOSURE_TIME_ABSOLUTE,
-      K4A_COLOR_CONTROL_MODE_MANUAL,
-      7000));
+  if (exposure > 0) {
+    K4A_CHECK(k4a_device_set_color_control(
+        device,
+        K4A_COLOR_CONTROL_EXPOSURE_TIME_ABSOLUTE,
+        K4A_COLOR_CONTROL_MODE_MANUAL,
+        exposure));
+  }
   
   transformation = k4a_transformation_create(&calibration);
   
   print_calibration(&calibration.color_camera_calibration);
   print_calibration(&calibration.depth_camera_calibration);
+  
+  if (!use_depth) {
+    width = calibration.color_camera_calibration.resolution_width;
+    height = calibration.color_camera_calibration.resolution_height;
+  } else {
+    width = calibration.depth_camera_calibration.resolution_width;
+    height = calibration.depth_camera_calibration.resolution_height;
+  }
   
   // Pre allocate memory
   init_memory();
@@ -282,7 +359,8 @@ void K4AInputThread::Start(RGBDVideo<Vec3u8, u16>* rgbd_video, float* depth_scal
   thread_.reset(new thread(std::bind(&K4AInputThread::ThreadMain, this)));
 }
 
-bool K4AInputThread::decode_image_opencv(const k4a_image_t &color_image,
+bool K4AInputThread::decode_image_opencv(
+    const k4a_image_t &color_image,
     k4a_image_t *_uncompressed_color_image,
     cv::Mat &decodedImage) {
   size_t nSize = k4a_image_get_size(color_image);
@@ -356,13 +434,15 @@ bool K4AInputThread::transform_depth_to_color(
   return true;
 }
 
-bool K4AInputThread::undistort_depth_and_rgb(k4a_calibration_intrinsic_parameters_t &intrinsics,
+bool K4AInputThread::undistort_depth_and_rgb(
+    k4a_calibration_intrinsic_parameters_t &intrinsics,
     const cv::Mat &cv_color,
     const cv::Mat &cv_depth,
     cv::Mat &undistorted_color,
     cv::Mat &undistorted_depth,
     const float _factor) {
-  cv::resize(cv_depth,
+  cv::resize(
+      cv_depth,
       cv_depth_downscaled,
       cv_depth_downscaled.size(),
       CV_INTER_AREA);
@@ -397,6 +477,10 @@ void K4AInputThread::ThreadMain() {
     }
   }
   
+  clock_t begin;
+  clock_t end;
+  double elapsed_secs;
+  unsigned int frame = 0;
   while (true) {
     if (exit_) {
       k4a_device_close(device);
@@ -407,7 +491,8 @@ void K4AInputThread::ThreadMain() {
     
     clock_t recording_start = clock();
     int32_t timeout_ms = 1000 / camera_fps;
-    result = k4a_device_get_capture(device, &capture, timeout_ms);
+    //result = k4a_device_get_capture(device, &capture, timeout_ms);
+    result = k4a_device_get_capture(device, &capture, K4A_WAIT_INFINITE);
     if (result == K4A_WAIT_RESULT_TIMEOUT) {
       LOG(WARNING) << "k4a timeout device get capture";
       continue;
@@ -415,6 +500,8 @@ void K4AInputThread::ThreadMain() {
       std::cerr << "Runtime error: k4a_device_get_capture() returned " << result << std::endl;
       break;
     }
+    //if (frame % 300 == 0)
+      begin = clock();
     
     // Access the depth16 image
     k4a_image_t k4a_depth_image = k4a_capture_get_depth_image(capture);
@@ -469,42 +556,71 @@ void K4AInputThread::ThreadMain() {
       //cv::Mat cv(height, width, CV_8UC3);
       cv::cvtColor(rawData, cv_uncompressed_color_image, CV_YUV2RGB_NV21, 0 );
     }
-    
-    // Reproject depth on color
-    if (!transform_depth_to_color(
-        transformation,
-        k4a_depth_image,
-        uncompressed_color_image,
-        &transformed_depth_image)) {
-      break;
-    }
-    
-    // wrap opencv mat over result
-    cv::Mat cv_transformed_depth_image(
-        k4a_image_get_height_pixels(transformed_depth_image),
-        k4a_image_get_width_pixels(transformed_depth_image),
+    cv::Mat cv_depth(
+        k4a_image_get_height_pixels(k4a_depth_image),
+        k4a_image_get_width_pixels(k4a_depth_image),
         CV_16UC1,
-        k4a_image_get_buffer(transformed_depth_image));
+        k4a_image_get_buffer(k4a_depth_image));
     
-    //LOG(INFO) << "K4A wrap opencv mat image";
-    //cv::imshow("cv transformed depth", cv_transformed_depth_image);
-    //cv::imshow("cv uncompressed color", cv_uncompressed_color_image);
-    // Undistort (and downscale) color and depth
-    undistort_depth_and_rgb(
-        calibration.color_camera_calibration.intrinsics.parameters,
-        cv_uncompressed_color_image,
-        cv_transformed_depth_image,
-        cv_undistorted_color,
-        cv_undistorted_depth, factor);
-    //LOG(INFO) << "K4A undistort depth and rgb";
-    //cv::imshow("Undistorted color", cv_undistorted_color);
-    //cv::imshow("Undistorted depth", cv_undistorted_depth);
-    cv::cvtColor(cv_undistorted_color, cv_undistorted_color_noalpha, CV_BGRA2RGB);
-    //LOG(INFO) << "Width and height are " << width << " " << height;
-    //LOG(INFO) << "cv undistorted depth size is " << cv_undistorted_depth.size();
-    //LOG(INFO) << "cv undistorted color_noalpha size is " << cv_undistorted_color_noalpha.size();
-    //cv::imshow("Undistorted color noapha", cv_undistorted_color_noalpha);
-    //cv::waitKey(3000);
+    cv::Mat cv_undistorted_ir;
+    if (!use_depth) {
+      // Reproject depth on color
+      if (!transform_depth_to_color(
+          transformation,
+          k4a_depth_image,
+          uncompressed_color_image,
+          &transformed_depth_image))
+          break;
+      
+      // wrap opencv mat over result
+      cv::Mat cv_transformed_depth_image(
+          k4a_image_get_height_pixels(transformed_depth_image),
+          k4a_image_get_width_pixels(transformed_depth_image),
+          CV_16UC1,
+          k4a_image_get_buffer(transformed_depth_image));
+      
+      // Undistort (and downscale) color and depth
+      undistort_depth_and_rgb(
+          calibration.color_camera_calibration.intrinsics.parameters,
+          cv_uncompressed_color_image,
+          cv_transformed_depth_image,
+          cv_undistorted_color,
+          cv_undistorted_depth, factor);
+      cv::cvtColor(cv_undistorted_color, cv_undistorted_color, CV_BGRA2RGB);
+    } else {
+      cv_depth *= 5.f;
+      remap(cv_depth, cv_undistorted_depth, map1, map2, cv::INTER_LINEAR, cv::BORDER_CONSTANT);
+      
+      k4a_image_t k4a_ir_image = k4a_capture_get_ir_image(capture);
+      if (k4a_ir_image == NULL) {
+        LOG(WARNING) << "Failed to get ir rgb images, skipping frame";
+        if (k4a_rgb_image) {
+          k4a_image_release(k4a_rgb_image);
+        }
+        if (k4a_depth_image) {
+          k4a_image_release(k4a_depth_image);
+        }
+        if (k4a_ir_image) {
+          k4a_image_release(k4a_ir_image);
+        }
+        k4a_capture_release(capture);
+        continue;
+      }
+      cv::Mat cv_ir_image(
+          k4a_image_get_height_pixels(k4a_ir_image),
+          k4a_image_get_width_pixels(k4a_ir_image),
+          CV_16UC1,
+          k4a_image_get_buffer(k4a_ir_image));
+      cv::Mat cv_ir_image_8;
+      cv_ir_image.convertTo(cv_ir_image_8, CV_8U, 1.f / 4.f);
+      remap(cv_ir_image_8, cv_undistorted_ir, map1, map2, cv::INTER_LINEAR, cv::BORDER_CONSTANT);
+      cv::cvtColor(cv_undistorted_ir, cv_undistorted_color, CV_GRAY2RGB);
+      //cv::imshow("cv ir image", cv_ir_image);
+      //cv::imshow("cvundistorted color", cv_undistorted_color);
+      //cv::waitKey(5000);
+    }
+    //cv::imshow("cvdepth", cv_depth);
+    //cv::imshow("cvundistorted depth", cv_undistorted_depth);
     
     // Add the frame to the queue
     unique_lock<mutex> lock(queue_mutex);
@@ -515,14 +631,15 @@ void K4AInputThread::ThreadMain() {
     depth_image->SetTo(
         reinterpret_cast<const u16*>(cv_undistorted_depth.data), 
         cv_undistorted_depth.step[0]);
+    //LOG(INFO) << "K4A after setto";
     depth_image_queue.push_back(depth_image);
     
-    shared_ptr<Image<Vec3u8>> color_image(new Image<Vec3u8>(
-        cv_undistorted_color_noalpha.cols, 
-        cv_undistorted_color_noalpha.rows));
+    shared_ptr<Image<Vec3u8>> color_image(
+        new Image<Vec3u8>(cv_undistorted_color.cols, 
+        cv_undistorted_color.rows));
     color_image->SetTo(
-        reinterpret_cast<const Vec3u8*>(cv_undistorted_color_noalpha.data), 
-        cv_undistorted_color_noalpha.step[0]);
+        reinterpret_cast<const Vec3u8*>(cv_undistorted_color.data), 
+        cv_undistorted_color.step[0]);
     color_image_queue.push_back(color_image);
     
     lock.unlock();
@@ -530,8 +647,14 @@ void K4AInputThread::ThreadMain() {
     k4a_image_release(k4a_rgb_image);
     k4a_image_release(k4a_depth_image);
     k4a_capture_release(capture);
+    end = clock();
+    frame++;
+    elapsed_secs += double(end - begin) / CLOCKS_PER_SEC;
+    if (frame % 300 == 0) {
+      LOG(INFO) << "seconds " << elapsed_secs;
+      elapsed_secs = 0;
+    }
   }
-  
   k4a_device_close(device);
 }
 

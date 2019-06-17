@@ -1544,12 +1544,18 @@ void MainWindow::WorkerThreadMain() {
   if (dataset_folder_path_ == string("live://realsense")) {
     rs_input.Start(&rgbd_video_, &depth_scaling_);
     live_input = 1;
-  } 
-  else if (dataset_folder_path_ == string("live://k4a")) {
-    k4a_input.Start(&rgbd_video_, &depth_scaling_);
+  } else if (dataset_folder_path_ == "live://k4a") {
+    k4a_input.Start(
+        &rgbd_video_, 
+        &depth_scaling_, 
+        config_.k4a_fps, 
+        config_.k4a_resolution, 
+        config_.k4a_factor,
+        config_.k4a_use_depth,
+        config_.k4a_mode,
+        config_.k4a_exposure);
     live_input = 2;
-  }
-  else {
+  } else {
     if (!ReadTUMRGBDDatasetAssociatedAndCalibrated(
             dataset_folder_path_.c_str(),
             nullptr,  // TODO:  trajectory_path.empty() ? nullptr : trajectory_path.c_str(),

@@ -79,7 +79,7 @@ class K4AInputThread {
   //                   be stored.
   // @param depth_scaling Output parameter in which the depth scaling will be returned:
   //                      recorded_depth = depth_scaling * depth_in_meters
-  void Start(RGBDVideo<Vec3u8, u16>* rgbd_video, float* depth_scaling);
+  void Start(RGBDVideo<Vec3u8, u16>* rgbd_video, float* depth_scaling, int fps, int resolution, int _factor, int use_depth, string mode, int exposure);
   
   // Retrieves the next input frame and stores it in the RGBDVideo given to the
   // constructor. Blocks while no new input frame is available.
@@ -96,8 +96,25 @@ class K4AInputThread {
 
   bool transform_depth_to_color(const k4a_transformation_t & transformation_handle, const k4a_image_t & depth_image, const k4a_image_t & color_image, k4a_image_t * transformed_image);
 
+ private:
+  void ThreadMain();
+  void init_memory();
+  void init_undistortion_map();
+  bool decode_image_opencv(
+      const k4a_image_t & color_image,
+      k4a_image_t * uncompressed_color_image, 
+      cv::Mat & decodedImage);
+
+  bool transform_depth_to_color(const k4a_transformation_t & transformation_handle, const k4a_image_t & depth_image, const k4a_image_t & color_image, k4a_image_t * transformed_image);
+
   bool undistort_depth_and_rgb(k4a_calibration_intrinsic_parameters_t & intrinsics, const cv::Mat & cv_color, const cv::Mat & cv_depth, cv::Mat & undistorted_color, cv::Mat & undistorted_depth, const float factor);
   uint32_t k4a_convert_fps_to_uint(k4a_fps_t fps);
+
+  k4a_fps_t k4a_convert_uint_to_fps(int fps);
+
+  k4a_depth_mode_t k4a_convert_string_to_mode(std::string strmode);
+
+  k4a_color_resolution_t k4a_convert_uint_to_resolution(int fps);
   
   std::mutex queue_mutex;
   std::condition_variable new_frame_condition_;
@@ -116,6 +133,8 @@ class K4AInputThread {
   int height;
 
   float factor{ 1.0 }; // scaling factor
+  bool use_depth{ false };
+  string mode;
   cv::Mat cv_undistorted_color;
   cv::Mat cv_undistorted_depth;
   cv::Mat cv_undistorted_color_noalpha;
@@ -126,6 +145,12 @@ class K4AInputThread {
   
   atomic<bool> exit_;
   
+  // The pipeline should not be allocated unless it is actually used. When that
+  // object is allocated, it seems to create several threads already and also
+  // continuously creates new short-lived threads.
+  //unique_ptr<rs2::pipeline> pipe;
+  //shared_ptr<rs2::align> align_;
+  
   RGBDVideo<Vec3u8, u16>* rgbd_video_;
   
   unique_ptr<thread> thread_;
@@ -134,13 +159,19 @@ class K4AInputThread {
 #else
 
 // Dummy version of K4AInputThread which replaces the actual version in
-// case the program is compiled without k4a. Asserts if any of its
+// case the program is compiled without librealsense2. Asserts if any of its
 // functions are called.
 class K4AInputThread {
  public:
-  inline void Start(RGBDVideo<Vec3u8, u16>* rgbd_video, float* depth_scaling) {
+  void Start(RGBDVideo<Vec3u8, u16>* rgbd_video, float* depth_scaling, int fps, int resolution, int _factor, int use_depth, string mode, int exposure) {
     (void) rgbd_video;
     (void) depth_scaling;
+    (void) fps;
+    (void) resolution;
+    (void) _factor;
+    (void) use_depth;
+    (void) mode;
+    (void) exposure;
     LOG(FATAL) << "Azure Kinect input requested, but the program was compiled without Azure Kinect support.";
   }
   
