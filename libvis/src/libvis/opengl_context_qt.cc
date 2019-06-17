@@ -34,13 +34,18 @@
 
 #include "libvis/glew.h"
 #include "libvis/logging.h"
+#include "libvis/qt_thread.h"
 
 namespace vis {
 
 OpenGLContextQt::~OpenGLContextQt() {
   // Delete the surface (since we always own it), but not the context (we might
   // own it, but then it should be deleted by Deinitialize()).
-  delete surface;
+  if (surface) {
+    RunInQtThreadBlocking([&](){
+        delete surface;
+    });
+  }
 }
 
 bool OpenGLContextQt::InitializeWindowless(OpenGLContextImpl* sharing_context) {
@@ -71,9 +76,9 @@ bool OpenGLContextQt::InitializeWindowless(OpenGLContextImpl* sharing_context) {
   
   surface = new QOffscreenSurface();
   surface->setFormat(context->format());
-  // NOTE: On some platforms, create() must be called on the main (GUI) thread.
-  //       This is not enforced here at all.
-  surface->create();
+  RunInQtThreadBlocking([&](){
+    surface->create();
+  });
   
   return true;
 }
@@ -81,7 +86,11 @@ bool OpenGLContextQt::InitializeWindowless(OpenGLContextImpl* sharing_context) {
 void OpenGLContextQt::Deinitialize() {
   delete context;
   context = nullptr;
-  delete surface;
+  if (surface) {
+    RunInQtThreadBlocking([&](){
+        delete surface;
+    });
+  }
   surface = nullptr;
 }
 
@@ -94,9 +103,9 @@ void OpenGLContextQt::AttachToCurrent() {
     
     surface = new QOffscreenSurface();
     surface->setFormat(context->format());
-    // NOTE: On some platforms, create() must be called on the main (GUI) thread.
-    //       This is not enforced here at all.
-    surface->create();
+    RunInQtThreadBlocking([&](){
+        surface->create();
+    });
   }
 }
 
