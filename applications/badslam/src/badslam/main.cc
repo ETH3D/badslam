@@ -414,10 +414,10 @@ int LIBVIS_QT_MAIN(int argc, char** argv) {
     }
     
     QSurfaceFormat surface_format;
-    surface_format.setVersion(3, 3);
+    surface_format.setVersion(4, 4);
     surface_format.setProfile(QSurfaceFormat::CompatibilityProfile);
     surface_format.setSamples(4);
-    surface_format.setAlphaBufferSize(8);
+    surface_format.setAlphaBufferSize(0 /*8*/);
     QSurfaceFormat::setDefaultFormat(surface_format);
     QApplication qapp(argc, argv);
     QCoreApplication::setOrganizationName("ETH");
