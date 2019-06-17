@@ -286,8 +286,8 @@ void K4AInputThread::Start(
   }
   
   config.camera_fps = k4a_convert_uint_to_fps(fps);
-  //config.color_format = K4A_IMAGE_FORMAT_COLOR_BGRA32;
-  config.color_format = K4A_IMAGE_FORMAT_COLOR_MJPG;
+  config.color_format = K4A_IMAGE_FORMAT_COLOR_BGRA32;
+  //config.color_format = K4A_IMAGE_FORMAT_COLOR_MJPG;
   //config.color_format = K4A_IMAGE_FORMAT_COLOR_YUY2;
   //config.color_format = K4A_IMAGE_FORMAT_COLOR_NV12;
   config.color_resolution = k4a_convert_uint_to_resolution(resolution);
@@ -477,10 +477,6 @@ void K4AInputThread::ThreadMain() {
     }
   }
   
-  clock_t begin;
-  clock_t end;
-  double elapsed_secs;
-  unsigned int frame = 0;
   while (true) {
     if (exit_) {
       k4a_device_close(device);
@@ -500,8 +496,6 @@ void K4AInputThread::ThreadMain() {
       std::cerr << "Runtime error: k4a_device_get_capture() returned " << result << std::endl;
       break;
     }
-    //if (frame % 300 == 0)
-      begin = clock();
     
     // Access the depth16 image
     k4a_image_t k4a_depth_image = k4a_capture_get_depth_image(capture);
@@ -647,13 +641,6 @@ void K4AInputThread::ThreadMain() {
     k4a_image_release(k4a_rgb_image);
     k4a_image_release(k4a_depth_image);
     k4a_capture_release(capture);
-    end = clock();
-    frame++;
-    elapsed_secs += double(end - begin) / CLOCKS_PER_SEC;
-    if (frame % 300 == 0) {
-      LOG(INFO) << "seconds " << elapsed_secs;
-      elapsed_secs = 0;
-    }
   }
   k4a_device_close(device);
 }
