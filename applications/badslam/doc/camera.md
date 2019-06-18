@@ -5,7 +5,7 @@ Consider the following three properties:
 * **Camera shutter**: Camera shutters are either global (all pixels of an image are
   recorded at the same time) or rolling (pixels are recored row by row or column
   by column). BAD SLAM assumes a global shutter camera. This applies both to the
-  color and the depth camera (assuming the depth data is recorded by a camera).
+  color and the depth camera.
 * **Camera synchronization**: BAD SLAM assumes that the RGB and depth images are
   recorded at exactly the same points in time.
 * **Camera calibration**: The camera calibration should be accurate. A good way to
@@ -15,10 +15,6 @@ Consider the following three properties:
   reasonably well might be acceptable, but is likely inferior since the model is
   unlikely to fit exactly. Using a default intrinsic calibration for a camera
   type, as it is sometimes being done, should be avoided.
-
-The properties listed above are not fulfilled by current consumer-level RGB-D
-cameras (see the table below). The [ETH3D SLAM benchmark](https://www.eth3d.net/slam_overview) is a
-suitable dataset if you are fine with working with pre-recorded datasets.
 
 If you cannot get suitable high-quality RGB-D data, consider using another SLAM system instead,
 for example [ORB-SLAM2](https://github.com/raulmur/ORB_SLAM2). If you
@@ -35,17 +31,20 @@ into the color image.
 ### Camera compatibility ###
 
 This table shows which of the listed properties are fulfilled by
-consumer-level RGB-D cameras. Currently, to the author's knowledge, no
-consumer-level RGB-D camera fulfills all properties.
+consumer-level RGB-D cameras.
 
-| Camera name   | Global shutter (depth) | Global shutter (color) | Synchronized |
-| ------------- | ---------------------- | ---------------------- | ------------ |
-| Asus Xtion Live Pro | no | no | no |
-| Intel RealSense D415 | no | no | yes after firmware update |
-| Intel RealSense D435 | yes | no | no |
-| Microsoft Kinect v1 | no | no | no |
-| Microsoft Kinect v2 | ? | no | ? |
-| Microsoft Kinect for Azure | yes | no | yes |
+| Camera name   | Global shutter (depth) | Global shutter (color) | Synchronized | Live support in BAD SLAM? |
+| ------------- | ---------------------- | ---------------------- | ------------ | ------------------------- |
+| Asus Xtion Live Pro |  |  |  |  |
+| Intel RealSense D415 |  |  | yes after firmware update | yes |
+| Intel RealSense D435 | yes |  |  | yes |
+| Microsoft Kinect v1 |  |  |  |  |
+| Microsoft Kinect v2 | ? |  | ? |  |
+| Microsoft Kinect for Azure | yes |  | yes | yes |
+| Occipital Structure Core | yes | yes | yes? | planned |
+
+The [ETH3D SLAM benchmark](https://www.eth3d.net/slam_overview) is a
+suitable dataset if you are fine with working with pre-recorded datasets.
 
 
 ## Using a different depth camera ##
