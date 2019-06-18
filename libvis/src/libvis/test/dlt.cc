@@ -132,14 +132,14 @@ TEST(DLT, KnownTransformsResult) {
   // DLT
   Mat3f H = DLT(input.data(), output.data(), input.size());
   Vec2f result = Vec3f(H * input_point.homogeneous()).hnormalized();
-  for (int row = 0; row < 3; ++ row) {
+  for (int row = 0; row < GT.rows(); ++ row) {
     EXPECT_NEAR(GT(row), result(row), kEpsilon) << " at (" << row << ")";
   }
   
   // Normalized DLT
   H = NormalizedDLT(input.data(), output.data(), input.size());
   result = Vec3f(H * input_point.homogeneous()).hnormalized();
-  for (int row = 0; row < 3; ++ row) {
+  for (int row = 0; row < GT.rows(); ++ row) {
     EXPECT_NEAR(GT(row), result(row), kEpsilon) << " at (" << row << ")";
   }
 }

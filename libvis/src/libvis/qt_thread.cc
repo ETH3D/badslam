@@ -39,10 +39,16 @@
 #include <QThread>
 #include <QTimer>
 
+#include "libvis/logging.h"
+
 namespace vis {
 
 // Runs the function in the Qt thread. Does not wait for it to complete.
 void RunInQtThread(const function<void()>& f) {
+  if (!qApp) {
+    LOG(ERROR) << "RunInQtThread(): No qApp exists. Not running the function.";
+    return;
+  }
   if (QThread::currentThread() == qApp->thread()) {
     f();
     return;
@@ -60,6 +66,10 @@ void RunInQtThread(const function<void()>& f) {
 
 // Runs the function in the Qt thread. Blocks until it completes.
 void RunInQtThreadBlocking(const function<void()>& f) {
+  if (!qApp) {
+    LOG(ERROR) << "RunInQtThreadBlocking(): No qApp exists. Not running the function.";
+    return;
+  }
   if (QThread::currentThread() == qApp->thread()) {
     f();
     return;

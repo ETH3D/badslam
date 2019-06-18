@@ -401,6 +401,19 @@ int LIBVIS_QT_MAIN(int argc, char** argv) {
     CUDAAutoTuner::Instance().SetTuningIteration(auto_tuning_iteration);
   }
   
+  // Always create a QApplication, even if not using the GUI. It is required for
+  // using libvis' Qt implementation for creating windowless OpenGL contexts.
+  QSurfaceFormat surface_format;
+  surface_format.setVersion(4, 4);
+  surface_format.setProfile(QSurfaceFormat::CompatibilityProfile);
+  surface_format.setSamples(4);
+  surface_format.setAlphaBufferSize(0 /*8*/);
+  QSurfaceFormat::setDefaultFormat(surface_format);
+  QApplication qapp(argc, argv);
+  QCoreApplication::setOrganizationName("ETH");
+  QCoreApplication::setOrganizationDomain("eth3d.net");
+  QCoreApplication::setApplicationName("BAD SLAM");
+  
   // Load the dataset, respectively start the live input or show the GUI.
   RealSenseInputThread rs_input;
   K4AInputThread k4a_input;
@@ -412,17 +425,6 @@ int LIBVIS_QT_MAIN(int argc, char** argv) {
       LOG(ERROR) << "Trajectory path given, but loading a ground truth trajectory is not supported yet: " << trajectory_path;
       return EXIT_FAILURE;
     }
-    
-    QSurfaceFormat surface_format;
-    surface_format.setVersion(4, 4);
-    surface_format.setProfile(QSurfaceFormat::CompatibilityProfile);
-    surface_format.setSamples(4);
-    surface_format.setAlphaBufferSize(0 /*8*/);
-    QSurfaceFormat::setDefaultFormat(surface_format);
-    QApplication qapp(argc, argv);
-    QCoreApplication::setOrganizationName("ETH");
-    QCoreApplication::setOrganizationDomain("eth3d.net");
-    QCoreApplication::setApplicationName("BAD SLAM");
     
     bool start_paused = false;
     if (!gui_run && !ShowSettingsWindow(&dataset_folder_path, &bad_slam_config, &start_paused)) {

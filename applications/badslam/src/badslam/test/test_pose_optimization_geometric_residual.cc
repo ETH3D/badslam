@@ -165,7 +165,7 @@ TEST(Optimization, PoseOptimizationWithGeometricResidual) {
     Matrix<float, 6, 1> error = (global_tr_frame_estimate.inverse() * global_tr_frame).log();
 //     LOG(INFO) << "Case " << offset_index << " error: " << error.transpose();
     for (int i = 0; i < 6; ++ i) {
-      constexpr float kTolerance = 1e-6f;
+      constexpr float kTolerance = 1.1e-6f;
       EXPECT_NEAR(0.f, error(i), kTolerance) << "Error in test case " << offset_index;
     }
   }

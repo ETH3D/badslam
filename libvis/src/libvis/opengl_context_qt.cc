@@ -55,6 +55,11 @@ bool OpenGLContextQt::InitializeWindowless(OpenGLContextImpl* sharing_context) {
     return false;
   }
   
+  if (!qApp) {
+    LOG(ERROR) << "A QApplication must be created before using OpenGLContextQt.";
+    return false;
+  }
+  
   context = new QOpenGLContext();
   
   if (sharing_context_qt) {
