@@ -96,17 +96,6 @@ class K4AInputThread {
 
   bool transform_depth_to_color(const k4a_transformation_t & transformation_handle, const k4a_image_t & depth_image, const k4a_image_t & color_image, k4a_image_t * transformed_image);
 
- private:
-  void ThreadMain();
-  void init_memory();
-  void init_undistortion_map();
-  bool decode_image_opencv(
-      const k4a_image_t & color_image,
-      k4a_image_t * uncompressed_color_image, 
-      cv::Mat & decodedImage);
-
-  bool transform_depth_to_color(const k4a_transformation_t & transformation_handle, const k4a_image_t & depth_image, const k4a_image_t & color_image, k4a_image_t * transformed_image);
-
   bool undistort_depth_and_rgb(k4a_calibration_intrinsic_parameters_t & intrinsics, const cv::Mat & cv_color, const cv::Mat & cv_depth, cv::Mat & undistorted_color, cv::Mat & undistorted_depth, const float factor);
   uint32_t k4a_convert_fps_to_uint(k4a_fps_t fps);
 
