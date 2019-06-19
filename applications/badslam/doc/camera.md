@@ -33,15 +33,15 @@ into the color image.
 This table shows which of the listed properties are fulfilled by
 consumer-level RGB-D cameras.
 
-| Camera name   | Global shutter (depth) | Global shutter (color) | Synchronized | Live support in BAD SLAM? |
-| ------------- | ---------------------- | ---------------------- | ------------ | ------------------------- |
+| Camera name   | Global shutter (depth) | Global shutter (color) | Synchronized | Live support in BAD SLAM |
+| ------------- | ---------------------- | ---------------------- | ------------ | ------------------------ |
 | Asus Xtion Live Pro |  |  |  |  |
 | Intel RealSense D415 |  |  | yes after firmware update | yes |
 | Intel RealSense D435 | yes |  |  | yes |
 | Microsoft Kinect v1 |  |  |  |  |
 | Microsoft Kinect v2 | ? |  | ? |  |
 | Microsoft Kinect for Azure | yes |  | yes | yes |
-| Occipital Structure Core | yes | yes | yes? | planned |
+| Occipital Structure Core | yes | yes | yes | planned |
 
 The [ETH3D SLAM benchmark](https://www.eth3d.net/slam_overview) is a
 suitable dataset if you are fine with working with pre-recorded datasets.
