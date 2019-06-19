@@ -501,9 +501,11 @@ void K4AInputThread::ThreadMain() {
     k4a_image_t k4a_depth_image = k4a_capture_get_depth_image(capture);
     
     // Access the rgb_image image
-    k4a_image_t k4a_rgb_image = k4a_capture_get_color_image(capture);
+	k4a_image_t k4a_rgb_image;
+	if (!use_depth)
+		k4a_rgb_image = k4a_capture_get_color_image(capture);
     
-    if (k4a_rgb_image == NULL || k4a_depth_image == NULL) {
+    if ((!use_depth && k4a_rgb_image == NULL) || k4a_depth_image == NULL) {
       LOG(WARNING) << "Failed to get both depth and rgb images, skipping frame";
       if (k4a_rgb_image) {
         k4a_image_release(k4a_rgb_image);
@@ -514,50 +516,53 @@ void K4AInputThread::ThreadMain() {
       k4a_capture_release(capture);
       continue;
     }
-    
-    cv::Mat cv_uncompressed_color_image;
-    // Uncompress color image
-    if (config.color_format == K4A_IMAGE_FORMAT_COLOR_MJPG) {
-      if (!decode_image_opencv(
-          k4a_rgb_image,
-          &uncompressed_color_image,
-          cv_uncompressed_color_image)) {
-        break;
-      }
-    } else if (config.color_format == K4A_IMAGE_FORMAT_COLOR_BGRA32) {
-      cv_uncompressed_color_image = cv::Mat(
-          height,
-          width,
-          CV_8UC4,
-          k4a_image_get_buffer(k4a_rgb_image));
-    } else if (config.color_format == K4A_IMAGE_FORMAT_COLOR_YUY2) {
-      size_t nSize = k4a_image_get_size(k4a_rgb_image);
-      uchar* buf = k4a_image_get_buffer(k4a_rgb_image);
-      cv::Mat rawData(height + height/2, width, CV_8UC1, (void*)buf);
-      LOG(INFO) << "rawdata size is " << nSize;
-      LOG(INFO) << "rawdata shape is " << rawData.size();
-      cv::Mat output(height, width, CV_8UC3);
-      cv::cvtColor(rawData, output, CV_YUV2BGR_YUY2, 0 );
-      cv::imshow("cv", output);
-      cv::waitKey(10000);
-      LOG(INFO) << "Color shape is " << output.size();
-      cv::imshow("cv", output);
-      cv::waitKey(10000);
-    } else if (config.color_format == K4A_IMAGE_FORMAT_COLOR_NV12) {
-      size_t nSize = k4a_image_get_size(k4a_rgb_image);
-      uchar* buf = k4a_image_get_buffer(k4a_rgb_image);
-      cv::Mat rawData(height *1.5, width, CV_8UC1, (void*)buf);
-      //cv::Mat cv(height, width, CV_8UC3);
-      cv::cvtColor(rawData, cv_uncompressed_color_image, CV_YUV2RGB_NV21, 0 );
-    }
+
     cv::Mat cv_depth(
         k4a_image_get_height_pixels(k4a_depth_image),
         k4a_image_get_width_pixels(k4a_depth_image),
         CV_16UC1,
         k4a_image_get_buffer(k4a_depth_image));
-    
+
+    cv::Mat cv_uncompressed_color_image;
     cv::Mat cv_undistorted_ir;
-    if (!use_depth) {
+	if (!use_depth)
+	{
+		if (config.color_format == K4A_IMAGE_FORMAT_COLOR_MJPG) {
+			if (!decode_image_opencv(
+				k4a_rgb_image,
+				&uncompressed_color_image,
+				cv_uncompressed_color_image)) {
+				break;
+			}
+		}
+		else if (config.color_format == K4A_IMAGE_FORMAT_COLOR_BGRA32) {
+			cv_uncompressed_color_image = cv::Mat(
+				height,
+				width,
+				CV_8UC4,
+				k4a_image_get_buffer(k4a_rgb_image));
+		}
+		else if (config.color_format == K4A_IMAGE_FORMAT_COLOR_YUY2) {
+			size_t nSize = k4a_image_get_size(k4a_rgb_image);
+			uchar* buf = k4a_image_get_buffer(k4a_rgb_image);
+			cv::Mat rawData(height + height / 2, width, CV_8UC1, (void*)buf);
+			LOG(INFO) << "rawdata size is " << nSize;
+			LOG(INFO) << "rawdata shape is " << rawData.size();
+			cv::Mat output(height, width, CV_8UC3);
+			cv::cvtColor(rawData, output, CV_YUV2BGR_YUY2, 0);
+			cv::imshow("cv", output);
+			cv::waitKey(10000);
+			LOG(INFO) << "Color shape is " << output.size();
+			cv::imshow("cv", output);
+			cv::waitKey(10000);
+		}
+		else if (config.color_format == K4A_IMAGE_FORMAT_COLOR_NV12) {
+			size_t nSize = k4a_image_get_size(k4a_rgb_image);
+			uchar* buf = k4a_image_get_buffer(k4a_rgb_image);
+			cv::Mat rawData(height *1.5, width, CV_8UC1, (void*)buf);
+			//cv::Mat cv(height, width, CV_8UC3);
+			cv::cvtColor(rawData, cv_uncompressed_color_image, CV_YUV2RGB_NV21, 0);
+		}
       // Reproject depth on color
       if (!transform_depth_to_color(
           transformation,
@@ -581,40 +586,36 @@ void K4AInputThread::ThreadMain() {
           cv_undistorted_color,
           cv_undistorted_depth, factor);
       cv::cvtColor(cv_undistorted_color, cv_undistorted_color, CV_BGRA2RGB);
-    } else {
-      cv_depth *= 5.f;
-      remap(cv_depth, cv_undistorted_depth, map1, map2, cv::INTER_LINEAR, cv::BORDER_CONSTANT);
-      
-      k4a_image_t k4a_ir_image = k4a_capture_get_ir_image(capture);
-      if (k4a_ir_image == NULL) {
-        LOG(WARNING) << "Failed to get ir rgb images, skipping frame";
-        if (k4a_rgb_image) {
-          k4a_image_release(k4a_rgb_image);
-        }
-        if (k4a_depth_image) {
-          k4a_image_release(k4a_depth_image);
-        }
-        if (k4a_ir_image) {
-          k4a_image_release(k4a_ir_image);
-        }
-        k4a_capture_release(capture);
-        continue;
-      }
-      cv::Mat cv_ir_image(
-          k4a_image_get_height_pixels(k4a_ir_image),
-          k4a_image_get_width_pixels(k4a_ir_image),
-          CV_16UC1,
-          k4a_image_get_buffer(k4a_ir_image));
-      cv::Mat cv_ir_image_8;
-      cv_ir_image.convertTo(cv_ir_image_8, CV_8U, 1.f / 4.f);
-      remap(cv_ir_image_8, cv_undistorted_ir, map1, map2, cv::INTER_LINEAR, cv::BORDER_CONSTANT);
-      cv::cvtColor(cv_undistorted_ir, cv_undistorted_color, CV_GRAY2RGB);
-      //cv::imshow("cv ir image", cv_ir_image);
-      //cv::imshow("cvundistorted color", cv_undistorted_color);
-      //cv::waitKey(5000);
-    }
-    //cv::imshow("cvdepth", cv_depth);
-    //cv::imshow("cvundistorted depth", cv_undistorted_depth);
+	}
+	else {
+		cv_depth *= 5.f;
+		remap(cv_depth, cv_undistorted_depth, map1, map2, cv::INTER_LINEAR, cv::BORDER_CONSTANT);
+
+		k4a_image_t k4a_ir_image = k4a_capture_get_ir_image(capture);
+		if (k4a_ir_image == NULL) {
+			LOG(WARNING) << "Failed to get ir rgb images, skipping frame";
+			if (k4a_rgb_image) {
+				k4a_image_release(k4a_rgb_image);
+			}
+			if (k4a_depth_image) {
+				k4a_image_release(k4a_depth_image);
+			}
+			if (k4a_ir_image) {
+				k4a_image_release(k4a_ir_image);
+			}
+			k4a_capture_release(capture);
+			continue;
+		}
+		cv::Mat cv_ir_image(
+			k4a_image_get_height_pixels(k4a_ir_image),
+			k4a_image_get_width_pixels(k4a_ir_image),
+			CV_16UC1,
+			k4a_image_get_buffer(k4a_ir_image));
+		cv::Mat cv_ir_image_8;
+		cv_ir_image.convertTo(cv_ir_image_8, CV_8U, 1.f / 4.f);
+		remap(cv_ir_image_8, cv_undistorted_ir, map1, map2, cv::INTER_LINEAR, cv::BORDER_CONSTANT);
+		cv::cvtColor(cv_undistorted_ir, cv_undistorted_color, CV_GRAY2RGB);
+	}
     
     // Add the frame to the queue
     unique_lock<mutex> lock(queue_mutex);
@@ -638,7 +639,9 @@ void K4AInputThread::ThreadMain() {
     
     lock.unlock();
     new_frame_condition_.notify_all();
-    k4a_image_release(k4a_rgb_image);
+    if (k4a_rgb_image)
+        k4a_image_release(k4a_rgb_image);
+    if (k4a_depth_image)
     k4a_image_release(k4a_depth_image);
     k4a_capture_release(capture);
   }
