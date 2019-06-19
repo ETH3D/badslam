@@ -83,13 +83,13 @@ k4a_fps_t K4AInputThread::k4a_convert_uint_to_fps(int fps) {
 
 k4a_depth_mode_t K4AInputThread::k4a_convert_string_to_mode(std::string strmode) {
   k4a_depth_mode_t mode = K4A_DEPTH_MODE_NFOV_UNBINNED;
-  if (strmode.compare("nfov")) {
+  if (strmode == "nfov") {
     mode = K4A_DEPTH_MODE_NFOV_2X2BINNED;
-  } else if (strmode.compare("nfov2x2")) {
+  } else if (strmode == "nfov2x2") {
     mode = K4A_DEPTH_MODE_NFOV_UNBINNED;
-  } else if (strmode.compare("wfov")) {
+  } else if (strmode == "wfov") {
     mode = K4A_DEPTH_MODE_WFOV_UNBINNED;
-  } else if (strmode.compare("wfov2x2")) {
+  } else if (strmode == "wfov2x2") {
     mode = K4A_DEPTH_MODE_WFOV_2X2BINNED;
   }
   return mode;
@@ -153,7 +153,7 @@ void K4AInputThread::init_undistortion_map() {
       camera_matrix,
       dist_coeffs,
       cv_depth_downscaled.size(),
-      0,
+      1,
       cv_depth_downscaled.size(),
       0,
       true);
@@ -261,16 +261,19 @@ void K4AInputThread::Start(
     RGBDVideo<Vec3u8, u16>* rgbd_video, float* depth_scaling,
     int fps, int resolution, int _factor,
     int _use_depth,string mode, int exposure) {
-  LOG(INFO) << fps;
-  LOG(INFO) << resolution;
-  LOG(INFO) << _factor;
-  LOG(INFO) << _use_depth;
+  //LOG(INFO) << fps;
+  //LOG(INFO) << resolution;
+  //LOG(INFO) << _factor;
+  //LOG(INFO) << _use_depth;
+  //LOG(INFO) << mode;
+  //LOG(INFO) << exposure;
+  //LOG(INFO) << k4a_convert_string_to_mode(mode);
   factor = _factor;
   rgbd_video_ = rgbd_video;
   if (_use_depth != 0) {
     use_depth = true;
   }
-  LOG(INFO) << "depth scaling " << *depth_scaling;
+  //LOG(INFO) << "depth scaling " << *depth_scaling;
   //factor = *depth_scaling;
   
   uint32_t device_count = k4a_device_get_installed_count();
@@ -370,7 +373,7 @@ bool K4AInputThread::decode_image_opencv(
   decodedImage = cv::imdecode(rawData, CV_LOAD_IMAGE_UNCHANGED);
   if (decodedImage.data == NULL) {
     // Error reading raw image data
-    printf("Error decoding image\n");
+    LOG(ERROR) << "Error decoding image\n";
     return false;
   }
   k4a_image_create_from_buffer(
