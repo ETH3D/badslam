@@ -86,6 +86,7 @@ void ShowMainWindow(
     BadSlamConfig& config,
     const string& program_path,
     const string& dataset_folder_path,
+    const string& import_calibration_path,
     float depth_scaling,
     float splat_half_extent_in_pixels,
     bool show_current_frame_cloud,
@@ -99,6 +100,7 @@ void ShowMainWindow(
       config,
       program_path,
       dataset_folder_path,
+      import_calibration_path,
       depth_scaling,
       splat_half_extent_in_pixels,
       show_current_frame_cloud,
@@ -117,6 +119,7 @@ MainWindow::MainWindow(
     BadSlamConfig& config,
     const string& program_path,
     const string& dataset_folder_path,
+    const string& import_calibration_path,
     float depth_scaling,
     float splat_half_extent_in_pixels,
     bool show_current_frame_cloud,
@@ -126,6 +129,7 @@ MainWindow::MainWindow(
     : QMainWindow(parent, flags),
       program_path_(program_path),
       dataset_folder_path_(dataset_folder_path),
+      import_calibration_path_(import_calibration_path),
       depth_scaling_(depth_scaling),
       config_(config) {
   setWindowTitle("BAD SLAM");
@@ -404,7 +408,7 @@ MainWindow::MainWindow(
   
   // Create queued signal-slot connections that allow to run functions in a different thread.
   // NOTE: Some of these connections are blocking, others are not.
-  connect(this, &MainWindow::CouldNotLoadDatasetSignal, this, &MainWindow::CouldNotLoadDataset, Qt::BlockingQueuedConnection);
+  connect(this, &MainWindow::FatalErrorSignal, this, &MainWindow::FatalError, Qt::BlockingQueuedConnection);
   connect(this, &MainWindow::RunStateChangedSignal, this, &MainWindow::RunStateChanged, Qt::BlockingQueuedConnection);
   connect(this, &MainWindow::IntrinsicsUpdatedSignal, this, &MainWindow::IntrinsicsUpdated, Qt::BlockingQueuedConnection);
   connect(this, &MainWindow::DatasetPlaybackFinishedSignal, this, &MainWindow::DatasetPlaybackFinished, Qt::BlockingQueuedConnection);
@@ -1567,7 +1571,7 @@ void MainWindow::WorkerThreadMain() {
       lock.unlock();
       quit_condition_.notify_all();
       
-      emit CouldNotLoadDatasetSignal(QString::fromStdString(dataset_folder_path_));
+      emit FatalErrorSignal(tr("Could not load dataset: %1").arg(QString::fromStdString(dataset_folder_path_)));
       return;
     }
     
@@ -1695,12 +1699,16 @@ void MainWindow::WorkerThreadMain() {
                               render_window_, &opengl_context_2));
   bad_slam_set_ = true;
   
-  // TODO
-//   if (!import_calibration_path.empty()) {
-//     if (!LoadCalibration(&bad_slam_->direct_ba(), import_calibration_path)) {
-//       return EXIT_FAILURE;
-//     }
-//   }
+  if (!import_calibration_path_.empty()) {
+    if (!LoadCalibration(&bad_slam_->direct_ba(), import_calibration_path_)) {
+      unique_lock<mutex> lock(run_mutex_);
+      quit_done_ = true;
+      lock.unlock();
+      quit_condition_.notify_all();
+      emit FatalErrorSignal(tr("Could not load calibration: %1").arg(QString::fromStdString(import_calibration_path_)));
+      return;
+    }
+  }
   
   render_window_->SetDirectBA(&bad_slam_->direct_ba());
   
@@ -1881,8 +1889,8 @@ void MainWindow::RunStateChanged(bool running) {
   is_running_ = running;
 }
 
-void MainWindow::CouldNotLoadDataset(const QString& dataset_path) {
-  QMessageBox::warning(this, tr("Error"), tr("Could not load dataset: %1").arg(dataset_path));
+void MainWindow::FatalError(const QString& text) {
+  QMessageBox::warning(this, tr("Error"), text);
   close();
 }
 

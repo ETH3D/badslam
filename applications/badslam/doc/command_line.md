@@ -110,7 +110,7 @@ A complete list of optional program arguments follows, grouped by category:
 
 #### Input paths ####
 
-* `--import_calibration` (default ""): Load the calibration from the given base path (as three files, with extensions .depth_intrinsics.txt, .color_intrinsics.txt, and .deformation.txt). Applies to the command line mode only, not to the GUI.
+* `--import_calibration` (default ""): Load the calibration from the given base path (as three files, with extensions .depth_intrinsics.txt, .color_intrinsics.txt, and .deformation.txt).
 
 #### Sequential parameters ####
 
