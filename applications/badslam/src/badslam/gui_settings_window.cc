@@ -606,12 +606,14 @@ bool SettingsDialog::ParseSettings() {
 
   // k4a settings
   // TODO Silvano error check
+#ifdef HAVE_K4A
   config->k4a_mode = k4a_mode_edit->text().toStdString();
   config->k4a_fps = k4a_fps_edit->text().toInt(&ok);
   config->k4a_resolution = k4a_resolution_edit->text().toInt(&ok);
   config->k4a_factor = k4a_factor_edit->text().toInt(&ok);
   config->k4a_use_depth = k4a_use_depth_edit->text().toInt(&ok);
   config->k4a_exposure = k4a_exposure_edit->text().toInt(&ok);
+#endif
   
   return true;
 }
