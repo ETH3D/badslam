@@ -77,7 +77,7 @@ The following external dependencies are required.
 | [GTest](https://github.com/google/googletest) |  |
 | [OpenCV](https://opencv.org/) | 3.1.0, 3.2.0, 3.4.5; 4.x does NOT work without changes |
 | [OpenGV](https://github.com/laurentkneip/opengv) |  |
-| [Qt](https://www.qt.io/) | 5.12.0 |
+| [Qt](https://www.qt.io/) | 5.12.0; minimum version: 5.8 |
 | [SuiteSparse](http://faculty.cse.tamu.edu/davis/suitesparse.html) |  |
 | [zlib](https://zlib.net/) |  |
 

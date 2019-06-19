@@ -29,6 +29,7 @@
 
 #include "libvis/qt_thread.h"
 
+#include <atomic>
 #include <condition_variable>
 #include <functional>
 #include <iostream>

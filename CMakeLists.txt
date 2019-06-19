@@ -125,7 +125,7 @@ set(CMAKE_AUTOMOC ON)
 # Instruct CMake to run rcc (resource compiler) automatically when needed.
 set(CMAKE_AUTORCC ON)
 
-find_package(Qt5 COMPONENTS Core OpenGL Widgets REQUIRED)
+find_package(Qt5 5.8 REQUIRED COMPONENTS Core OpenGL Widgets)
 
 if (UNIX AND NOT APPLE)
   find_package(Qt5X11Extras REQUIRED)
