@@ -39,13 +39,22 @@ PreLoadThread::PreLoadThread(RGBDVideo<Vec3u8, u16>* rgbd_video) {
   thread_.reset(new thread(bind(&PreLoadThread::ThreadMain, this)));
 }
 
+PreLoadThread::~PreLoadThread() {
+  RequestExitAndWaitForIt();
+}
+
 void PreLoadThread::RequestExitAndWaitForIt() {
+  if (!thread_) {
+    return;
+  }
+  
   unique_lock<mutex> input_lock(input_mutex_);
   thread_exit_requested_ = true;
   input_lock.unlock();
   new_input_available_condition_.notify_all();
   
   thread_->join();
+  thread_.reset();
 }
 
 void PreLoadThread::ThreadMain() {

@@ -48,6 +48,8 @@ class PreLoadThread {
   // Constructor, starts the thread.
   PreLoadThread(RGBDVideo<Vec3u8, u16>* rgbd_video);
   
+  ~PreLoadThread();
+  
   // Signals the thread to exit and waits for this to happen.
   void RequestExitAndWaitForIt();
   

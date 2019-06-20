@@ -437,6 +437,7 @@ int LIBVIS_QT_MAIN(int argc, char** argv) {
         bad_slam_config,
         argv[0],
         dataset_folder_path,
+        import_calibration_path,
         depth_scaling,
         splat_half_extent_in_pixels,
         show_current_frame_cloud,

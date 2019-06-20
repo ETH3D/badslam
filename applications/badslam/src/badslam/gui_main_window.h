@@ -54,6 +54,7 @@ void ShowMainWindow(
     BadSlamConfig& config,
     const string& program_path,
     const string& dataset_folder_path,
+    const string& import_calibration_path,
     float depth_scaling,
     float splat_half_extent_in_pixels,
     bool show_current_frame_cloud,
@@ -75,6 +76,7 @@ class MainWindow : public QMainWindow {
       BadSlamConfig& config,
       const string& program_path,
       const string& dataset_folder_path,
+      const string& import_calibration_path,
       float depth_scaling,
       float splat_half_extent_in_pixels,
       bool show_current_frame_cloud,
@@ -85,7 +87,7 @@ class MainWindow : public QMainWindow {
   ~MainWindow();
   
  signals:
-  void CouldNotLoadDatasetSignal(const QString& dataset_path);
+  void FatalErrorSignal(const QString& text);
   void RunStateChangedSignal(bool running);
   void IntrinsicsUpdatedSignal();
   void DatasetPlaybackFinishedSignal();
@@ -142,7 +144,7 @@ class MainWindow : public QMainWindow {
   void ClickedKeyframe(int index);
   
   // NOTE: The following functions must be called from the GUI thread.
-  void CouldNotLoadDataset(const QString& dataset_path);
+  void FatalError(const QString& text);
   void RunStateChanged(bool running);
   void IntrinsicsUpdated();
   void DatasetPlaybackFinished();
@@ -260,6 +262,7 @@ class MainWindow : public QMainWindow {
   // Settings
   string program_path_;
   string dataset_folder_path_;
+  string import_calibration_path_;
   float depth_scaling_;
   BadSlamConfig& config_;
 };

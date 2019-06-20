@@ -33,15 +33,15 @@ into the color image.
 This table shows which of the listed properties are fulfilled by
 consumer-level RGB-D cameras.
 
-| Camera name   | Global shutter (depth) | Global shutter (color) | Synchronized | Live support in BAD SLAM? |
-| ------------- | ---------------------- | ---------------------- | ------------ | ------------------------- |
+| Camera name   | Global shutter (depth) | Global shutter (color) | Synchronized | Live support in BAD SLAM |
+| ------------- | ---------------------- | ---------------------- | ------------ | ------------------------ |
 | Asus Xtion Live Pro |  |  |  |  |
 | Intel RealSense D415 |  |  | yes after firmware update | yes |
 | Intel RealSense D435 | yes |  |  | yes |
 | Microsoft Kinect v1 |  |  |  |  |
 | Microsoft Kinect v2 | ? |  | ? |  |
 | Microsoft Kinect for Azure | yes |  | yes | yes |
-| Occipital Structure Core | yes | yes | yes? | planned |
+| Occipital Structure Core | yes | yes | yes | planned |
 
 The [ETH3D SLAM benchmark](https://www.eth3d.net/slam_overview) is a
 suitable dataset if you are fine with working with pre-recorded datasets.
@@ -70,7 +70,7 @@ a different depth camera. Here are some parameters to consider (see also the [co
   For example, normal maps for images taken with the first-generation Kinect or Asus Xtion will contain some vertical stripes since the camera introduces some depth discontinuities there.
   These kinds of problems should not be addressed with higher smoothing (since this would lead to oversmoothing), but instead by calibrating for the depth distortion,
   for example with the self-calibration that is included in BAD SLAM -- see below.
-  TODO: Is the visualization affected by the depth deformation calibration?
+  Please note that this calibration will currently not affect the visualization however.
 * `--baseline_fx`: This specifies the baseline of the stereo system used to create the depth maps (in meters), multiplied by the depth camera's focal length (in pixels).
   This is used to estimate the depth uncertainty from stereo matching, as stated in the paper.
   It is used together with the expected stereo matching uncertainty of 0.1 pixels, which is
@@ -83,7 +83,8 @@ a different depth camera. Here are some parameters to consider (see also the [co
 Furthermore, you may want to calibrate for depth distortion (and camera intrinsics) using `--optimize_intrinsics`.
 If possible, this should be done once as a calibration step and left fixed afterwards.
 This is because this self-calibration impacts the runtime performance and reduces robustness (due to possible self-calibration failures). The calibration can be
-saved using `--export_calibration` and then loaded using `--import_calibration` in successive runs (TODO: verify this; does it work with the GUI?).
+saved using `--export_calibration` in command-line mode, or with the "Export intrinsic calibration ..." menu item if running the GUI.
+The saved calibration can be loaded using `--import_calibration` in successive runs.
 In the calibration dataset, try to make the camera observe surfaces within its whole
 sensing volume. If only a part of the volume is covered with observations, then the calibration
 may be inappropriate when extrapolated to the remaining parts.
