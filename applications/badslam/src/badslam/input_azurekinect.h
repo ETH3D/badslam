@@ -94,9 +94,15 @@ class K4AInputThread {
       k4a_image_t * uncompressed_color_image, 
       cv::Mat & decodedImage);
 
-  bool transform_depth_to_color(const k4a_transformation_t & transformation_handle, const k4a_image_t & depth_image, const k4a_image_t & color_image, k4a_image_t * transformed_image);
+  bool transform_depth_to_color(const k4a_transformation_t & transformation_handle, 
+      const k4a_image_t & depth_image, 
+      k4a_image_t * transformed_image);
 
-  bool undistort_depth_and_rgb(k4a_calibration_intrinsic_parameters_t & intrinsics, const cv::Mat & cv_color, const cv::Mat & cv_depth, cv::Mat & undistorted_color, cv::Mat & undistorted_depth, const float factor);
+  bool undistort_depth_and_rgb(k4a_calibration_intrinsic_parameters_t & intrinsics,
+      const cv::Mat & cv_color,
+      const cv::Mat & cv_depth,
+      cv::Mat & undistorted_color,
+      cv::Mat & undistorted_depth);
   uint32_t k4a_convert_fps_to_uint(k4a_fps_t fps);
 
   k4a_fps_t k4a_convert_uint_to_fps(int fps);
@@ -123,7 +129,6 @@ class K4AInputThread {
 
   float factor{ 1.0 }; // scaling factor
   bool use_depth{ false };
-  string mode;
   cv::Mat cv_undistorted_color;
   cv::Mat cv_undistorted_depth;
   cv::Mat cv_undistorted_color_noalpha;

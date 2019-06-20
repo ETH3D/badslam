@@ -81,18 +81,18 @@ k4a_fps_t K4AInputThread::k4a_convert_uint_to_fps(int fps) {
   return fps_int;
 }
 
-k4a_depth_mode_t K4AInputThread::k4a_convert_string_to_mode(std::string strmode) {
-  k4a_depth_mode_t mode = K4A_DEPTH_MODE_NFOV_UNBINNED;
+k4a_depth_mode_t K4AInputThread::k4a_convert_string_to_mode(const std::string strmode) {
+  k4a_depth_mode_t k4a_mode = K4A_DEPTH_MODE_NFOV_UNBINNED;
   if (strmode == "nfov") {
-    mode = K4A_DEPTH_MODE_NFOV_2X2BINNED;
+    k4a_mode = K4A_DEPTH_MODE_NFOV_2X2BINNED;
   } else if (strmode == "nfov2x2") {
-    mode = K4A_DEPTH_MODE_NFOV_UNBINNED;
+    k4a_mode = K4A_DEPTH_MODE_NFOV_UNBINNED;
   } else if (strmode == "wfov") {
-    mode = K4A_DEPTH_MODE_WFOV_UNBINNED;
+    k4a_mode = K4A_DEPTH_MODE_WFOV_UNBINNED;
   } else if (strmode == "wfov2x2") {
-    mode = K4A_DEPTH_MODE_WFOV_2X2BINNED;
+    k4a_mode = K4A_DEPTH_MODE_WFOV_2X2BINNED;
   }
-  return mode;
+  return k4a_mode;
 }
 
 k4a_color_resolution_t K4AInputThread::k4a_convert_uint_to_resolution(int fps) {
@@ -139,7 +139,7 @@ void K4AInputThread::init_undistortion_map() {
                                        intrinsics.p2, intrinsics.k3, intrinsics.k4,
                                        intrinsics.k5, intrinsics.k6 };
   
-  cv::Mat cv_depth_downscaled = cv::Mat::zeros(
+  cv_depth_downscaled = cv::Mat::zeros(
       height / factor,
       width / factor, CV_16U);
   
@@ -260,106 +260,104 @@ static void print_calibration(k4a_calibration_camera_t *calibration) {
 void K4AInputThread::Start(
     RGBDVideo<Vec3u8, u16>* rgbd_video, float* depth_scaling,
     int fps, int resolution, int _factor,
-    int _use_depth,string mode, int exposure) {
-  //LOG(INFO) << fps;
-  //LOG(INFO) << resolution;
-  //LOG(INFO) << _factor;
-  //LOG(INFO) << _use_depth;
-  //LOG(INFO) << mode;
-  //LOG(INFO) << exposure;
-  //LOG(INFO) << k4a_convert_string_to_mode(mode);
-  factor = _factor;
-  rgbd_video_ = rgbd_video;
-  if (_use_depth != 0) {
-    use_depth = true;
-  }
-  //LOG(INFO) << "depth scaling " << *depth_scaling;
-  //factor = *depth_scaling;
-  
-  uint32_t device_count = k4a_device_get_installed_count();
-  
-  if (device_count == 0) {
-    LOG(ERROR) << "WARNING: I can't find any K4A device!";
-    return;
-  }
-  
-  if (K4A_RESULT_SUCCEEDED != k4a_device_open(K4A_DEVICE_DEFAULT, &device)) {
-    LOG(ERROR) << "WARNING: Failed to open K4A device!";
-    return;
-  }
-  
-  config.camera_fps = k4a_convert_uint_to_fps(fps);
-  config.color_format = K4A_IMAGE_FORMAT_COLOR_BGRA32;
-  //config.color_format = K4A_IMAGE_FORMAT_COLOR_MJPG;
-  //config.color_format = K4A_IMAGE_FORMAT_COLOR_YUY2;
-  //config.color_format = K4A_IMAGE_FORMAT_COLOR_NV12;
-  config.color_resolution = k4a_convert_uint_to_resolution(resolution);
-  //config.depth_mode = K4A_DEPTH_MODE_NFOV_2X2BINNED;
-  //config.depth_mode = K4A_DEPTH_MODE_WFOV_UNBINNED;
-  //config.depth_mode = K4A_DEPTH_MODE_WFOV_2X2BINNED;
-  config.depth_mode = k4a_convert_string_to_mode(mode);
-  config.synchronized_images_only = true;
-  
-  if (K4A_RESULT_SUCCEEDED != k4a_device_start_cameras(device, &config)) {
-    LOG(ERROR) << "WARNING: Failed to open K4A device!";
-  }
-  
-  if (K4A_RESULT_SUCCEEDED !=
-      k4a_device_get_calibration(device, config.depth_mode, config.color_resolution, &calibration)) {
-    LOG(ERROR) << "WARNING: Failed to get calibration for K4A device!";
-  }
-  //k4a_device_set_color_control(
-  //    device,
-  //    K4A_COLOR_CONTROL_POWERLINE_FREQUENCY,
-  //    K4A_COLOR_CONTROL_MODE_MANUAL,
-  //    50);
-  
-  if (exposure > 0) {
-    K4A_CHECK(k4a_device_set_color_control(
-        device,
-        K4A_COLOR_CONTROL_EXPOSURE_TIME_ABSOLUTE,
-        K4A_COLOR_CONTROL_MODE_MANUAL,
-        exposure));
-  }
-  
-  transformation = k4a_transformation_create(&calibration);
-  
-  print_calibration(&calibration.color_camera_calibration);
-  print_calibration(&calibration.depth_camera_calibration);
-  
-  if (!use_depth) {
-    width = calibration.color_camera_calibration.resolution_width;
-    height = calibration.color_camera_calibration.resolution_height;
-  } else {
-    width = calibration.depth_camera_calibration.resolution_width;
-    height = calibration.depth_camera_calibration.resolution_height;
-  }
-  
-  // Pre allocate memory
-  init_memory();
-  init_undistortion_map();
-  
-  //*depth_scaling = 1.0 / depth_scale; // XXX TODO
-  
-  float color_parameters[4];
-  color_parameters[0] = new_camera_matrix.at<double>(0, 0);
-  color_parameters[1] = new_camera_matrix.at<double>(1, 1);
-  color_parameters[2] = new_camera_matrix.at<double>(0, 2) + 0.5; // XXX is 0.5 needed?
-  color_parameters[3] = new_camera_matrix.at<double>(1, 2) + 0.5;
-  
-  // pinhole camera with params
-  // fx, fy, cx, cy.
-  rgbd_video->color_camera_mutable()->reset(new PinholeCamera4f(
-      width/factor, height/factor, color_parameters));
-  //LOG(INFO) << rgbd_video->color_camera()->parameters();
-  
-  // Set depth camera to be the same as the color camera
-  rgbd_video->depth_camera_mutable()->reset(new PinholeCamera4f(
-      width/factor, height/factor, color_parameters));
-  
-  // Start thread
-  exit_ = false;
-  thread_.reset(new thread(std::bind(&K4AInputThread::ThreadMain, this)));
+    int _use_depth, string mode, int exposure) {
+    factor = _factor;
+    rgbd_video_ = rgbd_video;
+    if (_use_depth != 0) {
+        use_depth = true;
+    }
+
+    uint32_t device_count = k4a_device_get_installed_count();
+    if (device_count == 0) {
+        LOG(ERROR) << "WARNING: I can't find any K4A device!";
+        return;
+    }
+
+    if (K4A_RESULT_SUCCEEDED != k4a_device_open(K4A_DEVICE_DEFAULT, &device)) {
+        LOG(ERROR) << "WARNING: Failed to open K4A device!";
+        return;
+    }
+
+    config.camera_fps = k4a_convert_uint_to_fps(fps);
+    config.color_format = K4A_IMAGE_FORMAT_COLOR_BGRA32;
+    //config.color_format = K4A_IMAGE_FORMAT_COLOR_MJPG;
+    //config.color_format = K4A_IMAGE_FORMAT_COLOR_YUY2;
+    //config.color_format = K4A_IMAGE_FORMAT_COLOR_NV12;
+    if (!use_depth) {
+        config.color_resolution = k4a_convert_uint_to_resolution(resolution);
+        config.synchronized_images_only = true;
+    }
+    else {
+        config.color_resolution = K4A_COLOR_RESOLUTION_OFF;
+    }
+    //config.depth_mode = K4A_DEPTH_MODE_NFOV_2X2BINNED;
+    //config.depth_mode = K4A_DEPTH_MODE_WFOV_UNBINNED;
+    //config.depth_mode = K4A_DEPTH_MODE_WFOV_2X2BINNED;
+    config.depth_mode = k4a_convert_string_to_mode(mode);
+
+    if (K4A_RESULT_SUCCEEDED != k4a_device_start_cameras(device, &config)) {
+        LOG(ERROR) << "WARNING: Failed to open K4A device!";
+    }
+
+    if (K4A_RESULT_SUCCEEDED !=
+        k4a_device_get_calibration(device, config.depth_mode, config.color_resolution, &calibration)) {
+        LOG(ERROR) << "WARNING: Failed to get calibration for K4A device!";
+    }
+    //k4a_device_set_color_control(
+    //    device,
+    //    K4A_COLOR_CONTROL_POWERLINE_FREQUENCY,
+    //    K4A_COLOR_CONTROL_MODE_MANUAL,
+    //    50);
+
+    if (use_depth) {
+        if (exposure > 0) {
+            K4A_CHECK(k4a_device_set_color_control(
+                device,
+                K4A_COLOR_CONTROL_EXPOSURE_TIME_ABSOLUTE,
+                K4A_COLOR_CONTROL_MODE_MANUAL,
+                exposure));
+        }
+    }
+
+    transformation = k4a_transformation_create(&calibration);
+
+    print_calibration(&calibration.color_camera_calibration);
+    print_calibration(&calibration.depth_camera_calibration);
+
+    if (!use_depth) {
+        width = calibration.color_camera_calibration.resolution_width;
+        height = calibration.color_camera_calibration.resolution_height;
+    }
+    else {
+        width = calibration.depth_camera_calibration.resolution_width;
+        height = calibration.depth_camera_calibration.resolution_height;
+    }
+
+    // Pre allocate memory
+    init_memory();
+    init_undistortion_map();
+
+    //*depth_scaling = 1.0 / depth_scale; // XXX TODO
+
+    float color_parameters[4];
+    color_parameters[0] = new_camera_matrix.at<double>(0, 0);
+    color_parameters[1] = new_camera_matrix.at<double>(1, 1);
+    color_parameters[2] = new_camera_matrix.at<double>(0, 2) + 0.5; // XXX is 0.5 needed?
+    color_parameters[3] = new_camera_matrix.at<double>(1, 2) + 0.5;
+
+    // pinhole camera with params
+    // fx, fy, cx, cy.
+    rgbd_video->color_camera_mutable()->reset(new PinholeCamera4f(
+        width / factor, height / factor, color_parameters));
+    //LOG(INFO) << rgbd_video->color_camera()->parameters();
+
+    // Set depth camera to be the same as the color camera
+    rgbd_video->depth_camera_mutable()->reset(new PinholeCamera4f(
+        width / factor, height / factor, color_parameters));
+
+    // Start thread
+    exit_ = false;
+    thread_.reset(new thread(std::bind(&K4AInputThread::ThreadMain, this)));
 }
 
 bool K4AInputThread::decode_image_opencv(
@@ -423,7 +421,6 @@ void K4AInputThread::GetNextFrame() {
 bool K4AInputThread::transform_depth_to_color(
     const k4a_transformation_t &transformation_handle,
     const k4a_image_t &depth_image,
-    const k4a_image_t &color_image,
     k4a_image_t *transformed_image) {
   if (K4A_RESULT_SUCCEEDED !=
       k4a_transformation_depth_image_to_color_camera(
@@ -442,8 +439,8 @@ bool K4AInputThread::undistort_depth_and_rgb(
     const cv::Mat &cv_color,
     const cv::Mat &cv_depth,
     cv::Mat &undistorted_color,
-    cv::Mat &undistorted_depth,
-    const float _factor) {
+    cv::Mat &undistorted_depth)
+{
   cv::resize(
       cv_depth,
       cv_depth_downscaled,
@@ -471,12 +468,12 @@ void K4AInputThread::ThreadMain() {
   
   // Wait for the first capture in a loop
   while (!exit_ && (clock() - first_capture_start) < (CLOCKS_PER_SEC * timeout_sec_for_first_capture)) {
-    result = k4a_device_get_capture(device, &capture, 100);
+    result = k4a_device_get_capture(device, &capture, K4A_WAIT_INFINITE);
     if (result == K4A_WAIT_RESULT_SUCCEEDED) {
       k4a_capture_release(capture);
       break;
     } else if (result == K4A_WAIT_RESULT_FAILED) {
-      LOG(ERROR) << "Runtime error: k4a_device_get_capture() returned error: ";
+      LOG(ERROR) << "Runtime error: k4a_device_get_capture() returned error: " << result;
     }
   }
   
@@ -488,15 +485,15 @@ void K4AInputThread::ThreadMain() {
     
     uint32_t camera_fps = k4a_convert_fps_to_uint(config.camera_fps);
     
-    clock_t recording_start = clock();
-    int32_t timeout_ms = 1000 / camera_fps;
+    //clock_t recording_start = clock();
+    //int32_t timeout_ms = 1000 / camera_fps;
     //result = k4a_device_get_capture(device, &capture, timeout_ms);
     result = k4a_device_get_capture(device, &capture, K4A_WAIT_INFINITE);
     if (result == K4A_WAIT_RESULT_TIMEOUT) {
       LOG(WARNING) << "k4a timeout device get capture";
       continue;
     } else if (result != K4A_WAIT_RESULT_SUCCEEDED) {
-      std::cerr << "Runtime error: k4a_device_get_capture() returned " << result << std::endl;
+      LOG(ERROR) << "Runtime error: k4a_device_get_capture() returned error: " << result;
       break;
     }
     
@@ -504,7 +501,7 @@ void K4AInputThread::ThreadMain() {
     k4a_image_t k4a_depth_image = k4a_capture_get_depth_image(capture);
     
     // Access the rgb_image image
-	k4a_image_t k4a_rgb_image;
+    k4a_image_t k4a_rgb_image{ NULL };
 	if (!use_depth)
 		k4a_rgb_image = k4a_capture_get_color_image(capture);
     
@@ -560,17 +557,14 @@ void K4AInputThread::ThreadMain() {
 			cv::waitKey(10000);
 		}
 		else if (config.color_format == K4A_IMAGE_FORMAT_COLOR_NV12) {
-			size_t nSize = k4a_image_get_size(k4a_rgb_image);
 			uchar* buf = k4a_image_get_buffer(k4a_rgb_image);
 			cv::Mat rawData(height *1.5, width, CV_8UC1, (void*)buf);
-			//cv::Mat cv(height, width, CV_8UC3);
 			cv::cvtColor(rawData, cv_uncompressed_color_image, CV_YUV2RGB_NV21, 0);
 		}
       // Reproject depth on color
       if (!transform_depth_to_color(
           transformation,
           k4a_depth_image,
-          uncompressed_color_image,
           &transformed_depth_image))
           break;
       
@@ -587,7 +581,7 @@ void K4AInputThread::ThreadMain() {
           cv_uncompressed_color_image,
           cv_transformed_depth_image,
           cv_undistorted_color,
-          cv_undistorted_depth, factor);
+          cv_undistorted_depth);
       cv::cvtColor(cv_undistorted_color, cv_undistorted_color, CV_BGRA2RGB);
 	}
 	else {
