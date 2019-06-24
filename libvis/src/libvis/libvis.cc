@@ -67,21 +67,7 @@ void LibvisApplication::SetDefaultQSurfaceFormat() {
 }
 
 int LibvisApplication::WrapQtEventLoopAround(int (*func)(int, char**), int argc, char** argv) {
-  QApplication qapp(argc, argv);
-  qapp.setQuitOnLastWindowClosed(false);
-  
-  // Start the actual application in its own thread
-  int return_value = 1;
-  thread app_thread([&]{
-    return_value = func(argc, argv);
-    qapp.quit();
-  });
-  
-  // Run the Qt event loop
-  qapp.exec();
-  
-  app_thread.join();
-  return return_value;
+  return vis::WrapQtEventLoopAround(func, argc, argv);
 }
 
 }

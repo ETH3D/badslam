@@ -100,7 +100,7 @@ class LibvisApplication {
   int main(int argc, char** argv) { \
     vis::LibvisApplication app(argc, argv); \
     app.SetDefaultQSurfaceFormat(); \
-    return app.WrapQtEventLoopAround(&__libvis_main, argc, argv); \
+    return WrapQtEventLoopAround(&__libvis_main, argc, argv); \
   } \
   \
   int __libvis_main(argc_def, argv_def)

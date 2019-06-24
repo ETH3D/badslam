@@ -248,6 +248,7 @@ set(LIBVIS_FILES
   libvis/src/libvis/command_line_parser.h
   libvis/src/libvis/dlt.h
   libvis/src/libvis/eigen.h
+  libvis/src/libvis/geometry.h
   libvis/src/libvis/glew.cc
   libvis/src/libvis/glew.h
   libvis/src/libvis/image.cc
@@ -473,6 +474,7 @@ add_subdirectory(applications)
 add_executable(libvis_test
   libvis/src/libvis/test/camera.cc
   libvis/src/libvis/test/dlt.cc
+  libvis/src/libvis/test/geometry.cc
   libvis/src/libvis/test/image.cc
   libvis/src/libvis/test/image_cache.cc
   libvis/src/libvis/test/lm_optimizer.cc
