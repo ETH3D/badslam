@@ -22,11 +22,14 @@ If you use the provided code for research, please cite the paper describing the 
 The Windows port and Kinect-for-Azure (K4A) integration has been contributed by Silvano Galliani (Microsoft AI & Vision Zurich).
 
 
-## Screenshots ##
+## Screenshots & Videos ##
 
 | Main window   | Surfel normals display | Keyframe inspection |
 | ------------- | ---------------------- | ------------------- | 
 | ![Main Window](applications/badslam/doc/main_window.png?raw=true) | ![Settings](applications/badslam/doc/surfel_normals.png?raw=true) | ![Keyframe dialog](applications/badslam/doc/keyframe_dialog.png?raw=true) |
+
+* [Oral presentation of the conference paper by Torsten Sattler at CVPR 2019](https://www.youtube.com/watch?v=0lLnHe0xbZE)
+* [Short demonstration of some of the SLAM GUI features](https://youtu.be/g3yD9qmDW4M)
 
 
 ## Camera requirements ##
