@@ -65,6 +65,7 @@ void ImageDisplayQtWidget::SetCallbacks(const shared_ptr<ImageWindowCallbacks>& 
 }
 
 void ImageDisplayQtWidget::SetViewOffset(double x, double y) {
+  window_->FitContent(false);
   view_offset_x_ = x;
   view_offset_y_ = y;
   UpdateViewTransforms();
@@ -72,10 +73,31 @@ void ImageDisplayQtWidget::SetViewOffset(double x, double y) {
 }
 
 void ImageDisplayQtWidget::SetZoomFactor(double zoom_factor) {
+  window_->FitContent(false);
   view_scale_ = zoom_factor;
-  ZoomChanged(view_scale_);
+  emit ZoomChanged(view_scale_);
   UpdateViewTransforms();
   update(rect());
+}
+
+void ImageDisplayQtWidget::FitContent(bool update_display) {
+  if (qimage_.isNull()) {
+    return;
+  }
+  
+  // Center image
+  view_offset_x_ = 0.0;
+  view_offset_y_ = 0.0;
+  
+  // Scale image such that it exactly fills the widget
+  view_scale_ = std::min(width() / (1. * qimage_.width()),
+                         height() / (1. * qimage_.height()));
+  emit ZoomChanged(view_scale_);
+  
+  if (update_display) {
+    UpdateViewTransforms();
+    update(rect());
+  }
 }
 
 void ImageDisplayQtWidget::AddSubpixelDotPixelCornerConv(float x, float y, u8 r, u8 g, u8 b) {
@@ -116,6 +138,9 @@ QSize ImageDisplayQtWidget::sizeHint() const {
 }
 
 void ImageDisplayQtWidget::resizeEvent(QResizeEvent* event) {
+  if (window_->fit_contents_active()) {
+    FitContent(false);
+  }
   UpdateViewTransforms();
   QWidget::resizeEvent(event);
   if (callbacks_) {
@@ -304,16 +329,11 @@ void ImageDisplayQtWidget::wheelEvent(QWheelEvent* event) {
     QPointF center_on_image = ViewportToImage(event->pos());
     view_offset_x_ = event->pos().x() - (0.5 * width() - (0.5 * qimage_.width()) * (view_scale_ * scale_factor)) - (view_scale_ * scale_factor) * center_on_image.x();
     view_offset_y_ = event->pos().y() - (0.5 * height() - (0.5 * qimage_.height()) * (view_scale_ * scale_factor)) - (view_scale_ * scale_factor) * center_on_image.y();
-    view_scale_ = view_scale_ * scale_factor;
-    emit ZoomChanged(view_scale_);
-    
-    UpdateViewTransforms();
+    SetZoomFactor(view_scale_ * scale_factor);
     
     if (callbacks_ && event->orientation() == Qt::Vertical) {
       callbacks_->WheelRotated(event->delta() / 8.0f, ImageWindowCallbacks::ConvertQtModifiers(event));
     }
-    
-    update(rect());
   } else {
     event->ignore();
   }
@@ -485,6 +505,10 @@ void ImageDisplayQtWidget::UpdateQImage() {
     // Perform brightness / contrast adjustment.
     IDENTIFY_IMAGE(image_, AdjustBrightnessContrastHelper(_image_, white_value, black_value, &qimage_));
   }
+  
+  if (window_->fit_contents_active()) {
+    FitContent(false);
+  }
 }
 
 void ImageDisplayQtWidget::UpdateViewTransforms() {
@@ -515,20 +539,16 @@ void ImageDisplayQtWidget::startDragging(QPoint pos) {
 
 void ImageDisplayQtWidget::updateDragging(QPoint pos) {
 //   Q_ASSERT(dragging);
-  view_offset_x_ += (pos - drag_start_pos_).x();
-  view_offset_y_ += (pos - drag_start_pos_).y();
+  
+  QPoint offset = pos - drag_start_pos_;
+  SetViewOffset(view_offset_x_ + offset.x(),
+                view_offset_y_ + offset.y());
+  
   drag_start_pos_ = pos;
-  UpdateViewTransforms();
-  update(rect());
 }
 
 void ImageDisplayQtWidget::finishDragging(QPoint pos) {
-//   Q_ASSERT(dragging);
-  view_offset_x_ += (pos - drag_start_pos_).x();
-  view_offset_y_ += (pos - drag_start_pos_).y();
-  drag_start_pos_ = pos;
-  UpdateViewTransforms();
-  update(rect());
+  updateDragging(pos);
   
   dragging_ = false;
   setCursor(normal_cursor_);

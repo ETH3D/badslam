@@ -156,10 +156,12 @@ ImageDisplayQtWindow::ImageDisplayQtWindow(
   
   // Create the toolbar.
   tool_bar_ = new QToolBar("Main toolbar", this);
-  tool_bar_->addAction(QIcon(":/save.png"), "&Save", this, SLOT(SaveImage()));
-  tool_bar_->addAction(QIcon(":/copy.png"), "&Copy", this, SLOT(CopyImage()));
-  zoom_and_resize_act = tool_bar_->addAction(QIcon(":/zoom_and_resize_to_contents.png"), "&Zoom and resize to contents", this, SLOT(ZoomAndResizeToContent()));
-  resize_act = tool_bar_->addAction(QIcon(":/resize_to_contents.png"), "&Resize to contents", this, SLOT(ResizeToContentWithoutZoom()));
+  tool_bar_->addAction(QIcon(":/save.png"), "&Save image", this, SLOT(SaveImage()));
+  tool_bar_->addAction(QIcon(":/copy.png"), "&Copy image to clipboard", this, SLOT(CopyImage()));
+  fit_contents_act_ = tool_bar_->addAction(QIcon(":/fit_contents.png"), "&Fit image to window size", this, SLOT(FitContentToggled()));
+  fit_contents_act_->setCheckable(true);
+  zoom_and_resize_act = tool_bar_->addAction(QIcon(":/zoom_and_resize_to_contents.png"), "&Zoom and resize window to image", this, SLOT(ZoomAndResizeToContent()));
+  resize_act = tool_bar_->addAction(QIcon(":/resize_to_contents.png"), "&Resize window to image", this, SLOT(ResizeToContentWithoutZoom()));
   
   QToolButton* settings_toolbutton = new QToolButton();
   settings_toolbutton->setIcon(QIcon(":/settings_sliders.png"));
@@ -288,7 +290,7 @@ void ImageDisplayQtWindow::ResizeToContent(bool adjust_zoom) {
     // If the size is larger than the screen size in any of the two dimensions,
     // zoom out until it fits.
     while (size.width() > screen_size.width() ||
-          size.height() > screen_size.height()) {
+           size.height() > screen_size.height()) {
       initial_zoom_factor *= 0.5;
       size = QSize(
         initial_zoom_factor * image_widget_->sizeHint().width(),
@@ -317,6 +319,19 @@ void ImageDisplayQtWindow::ResizeToContent(bool adjust_zoom) {
   
   if (!isMaximized()) {
     resize(size);
+  }
+}
+
+void ImageDisplayQtWindow::FitContent(bool enable) {
+  fit_contents_act_->setChecked(enable);
+  if (enable) {
+    image_widget_->FitContent();
+  }
+}
+
+void ImageDisplayQtWindow::FitContentToggled() {
+  if (fit_contents_act_->isChecked()) {
+    FitContent();
   }
 }
 

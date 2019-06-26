@@ -29,6 +29,7 @@
 
 #pragma once
 
+#include <QAction>
 #include <QMainWindow>
 
 #include "libvis/image.h"
@@ -69,6 +70,8 @@ class ImageDisplayQtWindow : public QMainWindow {
   
   void SetDisplayAsWidget();
   
+  inline bool fit_contents_active() const { return fit_contents_act_->isChecked(); }
+  
   inline const ImageDisplayQtWidget& widget() const { return *image_widget_; }
   inline ImageDisplayQtWidget& widget() { return *image_widget_; }
   
@@ -79,6 +82,8 @@ class ImageDisplayQtWindow : public QMainWindow {
   void SaveImage();
   void CopyImage();
   void ResizeToContent(bool adjust_zoom);
+  void FitContent(bool enable = true);
+  void FitContentToggled();
   
   inline void ZoomAndResizeToContent() {
     ResizeToContent(true);
@@ -105,6 +110,7 @@ class ImageDisplayQtWindow : public QMainWindow {
   double white_value_;
   
   QToolBar* tool_bar_;
+  QAction* fit_contents_act_;
   QAction* zoom_and_resize_act;
   QAction* resize_act;
   

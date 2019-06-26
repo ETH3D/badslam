@@ -65,6 +65,7 @@ class ImageDisplayQtWidget : public QWidget
   void SetCallbacks(const shared_ptr<ImageWindowCallbacks>& callbacks);
   void SetViewOffset(double x, double y);
   void SetZoomFactor(double zoom_factor);
+  void FitContent(bool update_display = true);
   
   void AddSubpixelDotPixelCornerConv(float x, float y, u8 r, u8 g, u8 b);
   void AddSubpixelLinePixelCornerConv(float x0, float y0, float x1, float y1, u8 r, u8 g, u8 b);
