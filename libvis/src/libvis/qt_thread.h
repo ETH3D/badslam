@@ -42,6 +42,6 @@ void RunInQtThread(const function<void()>& f);
 void RunInQtThreadBlocking(const function<void()>& f);
 
 // Creates a QApplication and runs a Qt event loop while executing the function passed in.
-int WrapQtEventLoopAround(int (*func)(int, char**), int argc, char** argv);
+int WrapQtEventLoopAround(function<int (int, char**)> func, int argc, char** argv);
 
 }

@@ -100,7 +100,7 @@ void RunInQtThreadBlocking(const function<void()>& f) {
   }
 }
 
-int WrapQtEventLoopAround(int (*func)(int, char**), int argc, char** argv) {
+int WrapQtEventLoopAround(function<int (int, char**)> func, int argc, char** argv) {
   QApplication qapp(argc, argv);
   qapp.setQuitOnLastWindowClosed(false);
   
@@ -108,6 +108,9 @@ int WrapQtEventLoopAround(int (*func)(int, char**), int argc, char** argv) {
   int return_value = 1;
   thread app_thread([&]{
     return_value = func(argc, argv);
+    RunInQtThreadBlocking([&]() {
+      qapp.closeAllWindows();
+    });
     qapp.quit();
   });
   
