@@ -86,6 +86,7 @@ KeyframeDialog::KeyframeDialog(
   // Color
   ImageDisplayQtWindow* color_display = new ImageDisplayQtWindow(/*display*/ nullptr, /*parent*/ this);
   color_display->SetDisplayAsWidget();
+  color_display->FitContent();
   Image<uchar4> color_image_raw(keyframe->color_buffer().width(),
                                 keyframe->color_buffer().height());
   keyframe->color_buffer().DownloadAsync(/*stream*/ 0, &color_image_raw);
@@ -101,6 +102,7 @@ KeyframeDialog::KeyframeDialog(
   // Depth
   ImageDisplayQtWindow* depth_display = new ImageDisplayQtWindow(/*display*/ nullptr, /*parent*/ this);
   depth_display->SetDisplayAsWidget();
+  depth_display->FitContent();
   Image<u16> depth_image(keyframe->depth_buffer().width(),
                          keyframe->depth_buffer().height());
   keyframe->depth_buffer().DownloadAsync(/*stream*/ 0, &depth_image);
@@ -114,6 +116,7 @@ KeyframeDialog::KeyframeDialog(
   // Normals
   ImageDisplayQtWindow* normals_display = new ImageDisplayQtWindow(/*display*/ nullptr, /*parent*/ this);
   normals_display->SetDisplayAsWidget();
+  normals_display->FitContent();
   Image<u16> normals_image_raw(keyframe->normals_buffer().width(),
                                keyframe->normals_buffer().height());
   keyframe->normals_buffer().DownloadAsync(/*stream*/ 0, &normals_image_raw);
@@ -140,6 +143,7 @@ KeyframeDialog::KeyframeDialog(
   // Intensities
   ImageDisplayQtWindow* intensities_display = new ImageDisplayQtWindow(/*display*/ nullptr, /*parent*/ this);
   intensities_display->SetDisplayAsWidget();
+  intensities_display->FitContent();
   Image<u8> intensities_image(color_image_raw.size());
   for (int y = 0; y < color_image.height(); ++ y) {
     for (int x = 0; x < color_image.width(); ++ x) {
@@ -152,6 +156,7 @@ KeyframeDialog::KeyframeDialog(
   // Radius
   ImageDisplayQtWindow* radius_display = new ImageDisplayQtWindow(/*display*/ nullptr, /*parent*/ this);
   radius_display->SetDisplayAsWidget();
+  radius_display->FitContent();
   Image<u16> radius_image(keyframe->radius_buffer().width(),
                           keyframe->radius_buffer().height());
   keyframe->radius_buffer().DownloadAsync(/*stream*/ 0, &radius_image);

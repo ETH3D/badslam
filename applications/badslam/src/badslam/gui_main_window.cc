@@ -664,12 +664,15 @@ void MainWindow::ShowCurrentFrameImages() {
   
   current_frame_combined_display = new ImageDisplayQtWindow(/*display*/ nullptr, /*parent*/ current_frame_images_dialog);
   current_frame_combined_display->SetDisplayAsWidget();
+  current_frame_combined_display->FitContent();
   
   current_frame_color_display = new ImageDisplayQtWindow(/*display*/ nullptr, /*parent*/ current_frame_images_dialog);
   current_frame_color_display->SetDisplayAsWidget();
+  current_frame_color_display->FitContent();
   
   current_frame_depth_display = new ImageDisplayQtWindow(/*display*/ nullptr, /*parent*/ current_frame_images_dialog);
   current_frame_depth_display->SetDisplayAsWidget();
+  current_frame_depth_display->FitContent();
   current_frame_depth_display->SetBlackWhiteValues(0, config_.max_depth / config_.raw_to_float_depth);
   
   UpdateCurrentFrameImages(std::max(0, static_cast<int>(frame_index_) - 1), false);
@@ -767,6 +770,7 @@ void MainWindow::ShowIntrinsicsAndDepthDeformation() {
   
   depth_deformation_display = new ImageDisplayQtWindow(/*display*/ nullptr, /*parent*/ intrinsics_dialog);
   depth_deformation_display->SetDisplayAsWidget();
+  depth_deformation_display->FitContent();
   layout->addWidget(depth_deformation_display);
   
   intrinsics_dialog->setLayout(layout);
