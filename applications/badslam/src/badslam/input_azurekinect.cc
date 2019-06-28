@@ -162,10 +162,8 @@ void K4AInputThread::init_undistortion_map() {
       camera_matrix,
       dist_coeffs,
       cv_depth_downscaled.size(),
-      1,
-      cv_depth_downscaled.size(),
       0,
-      true);
+      cv_depth_downscaled.size());
   LOG(INFO) << "Camera matrix is " << camera_matrix;
   LOG(INFO) << "New camera matrix is " << new_camera_matrix;
   
