@@ -107,6 +107,12 @@ k4a_color_resolution_t K4AInputThread::k4a_convert_uint_to_resolution(int fps) {
   case 1440:
     fps_int = K4A_COLOR_RESOLUTION_1440P;
     break;
+  case 1536:
+    fps_int = K4A_COLOR_RESOLUTION_1536P;
+    break;
+  case 3072:
+    fps_int = K4A_COLOR_RESOLUTION_3072P;
+    break;
   default:
     fps_int = K4A_COLOR_RESOLUTION_720P;
     break;
