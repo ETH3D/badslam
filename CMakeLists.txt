@@ -14,6 +14,8 @@ if(MSVC)
   # See http://gernotklingler.com/blog/creating-using-shared-libraries-different-compilers-different-operating-systems/
   # and also https://stackoverflow.com/questions/37128555/getting-cmake-to-build-shared-library-for-msvc
   set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS YES CACHE BOOL "Export all symbols in Visual Studio")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /MP")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
   #set(CMake_MSVC_PARALLEL)
   #message ("Enabling parallel builds in visual studio")
 endif()
