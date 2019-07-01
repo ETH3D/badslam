@@ -14,6 +14,7 @@ if (CMAKE_CUDA_COMPILER)
   endif()
 
   add_subdirectory(third_party/DBoW2)
+  set_target_properties(DBoW2 Dependencies PROPERTIES FOLDER "badslam/third_party/DBoW2")
   
   find_package(opengv REQUIRED)
   
@@ -42,6 +43,7 @@ if (CMAKE_CUDA_COMPILER)
   add_library(badslam_baselib
     ${BAD_SLAM_SRC}
   )
+  set_property(TARGET badslam_baselib PROPERTY FOLDER "badslam")
   target_compile_options(badslam_baselib
     PUBLIC
       ${LIBVIS_WARNING_OPTIONS}
@@ -128,6 +130,7 @@ if (CMAKE_CUDA_COMPILER)
   add_executable(badslam
     ${BADSLAM_SRC}
   )
+  set_property(TARGET badslam PROPERTY FOLDER "badslam")
   target_include_directories(badslam PRIVATE
     src
     third_party
@@ -155,6 +158,7 @@ if (CMAKE_CUDA_COMPILER)
     src/badslam/test/test_pose_optimization_geometric_residual.cc
     src/badslam/test/test_pose_optimization_photometric_residual.cc
   )
+  set_property(TARGET badslam_test PROPERTY FOLDER "badslam")
   target_include_directories(badslam_test PRIVATE
     src
     third_party/cub-1.8.0

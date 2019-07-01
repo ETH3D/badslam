@@ -5,11 +5,17 @@ project(libvis LANGUAGES C CXX)
 # Enable C++11 globally
 set(CMAKE_CXX_STANDARD 11)
 
+# Support IDEs: https://cliutils.gitlab.io/modern-cmake/chapters/features/ides.html
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "cmake-default-targets")
+
 if(MSVC)
   # Fixes DLL generation with MSVC.
   # See http://gernotklingler.com/blog/creating-using-shared-libraries-different-compilers-different-operating-systems/
   # and also https://stackoverflow.com/questions/37128555/getting-cmake-to-build-shared-library-for-msvc
   set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS YES CACHE BOOL "Export all symbols in Visual Studio")
+  #set(CMake_MSVC_PARALLEL)
+  #message ("Enabling parallel builds in visual studio")
 endif()
 
 # Make CMake find the Find<Package>.cmake files in the cmake subdirectory.
@@ -68,6 +74,7 @@ find_package(Boost COMPONENTS serialization filesystem system REQUIRED)
 add_library(loguru SHARED
   libvis/third_party/loguru/loguru.cpp
 )
+set_property(TARGET loguru PROPERTY FOLDER "libvis/third_party")
 target_include_directories(loguru PUBLIC
   libvis/third_party/loguru/
 )
@@ -91,6 +98,7 @@ target_link_libraries(loguru
 
 # GTest (packaged)
 add_subdirectory(libvis/third_party/gtest)
+set_target_properties(gtest gtest_main PROPERTIES FOLDER "libvis/third_party")
 
 if(MSVC)
   if (MSVC_VERSION GREATER_EQUAL 1900)
@@ -102,6 +110,7 @@ enable_testing()
 
 # libpng (packaged)
 add_subdirectory(libvis/third_party/libpng)
+set_target_properties(png png_static genfiles genprebuilt gensym genvers symbol-check PROPERTIES FOLDER "libvis/third_party/png")
 
 # GLEW (external, required)
 find_package(GLEW REQUIRED)
@@ -179,6 +188,7 @@ endif()
 add_executable(bin2c
   ./libvis/src/bin2c/main.cc
 )
+set_property(TARGET bin2c PROPERTY FOLDER "libvis")
 
 target_include_directories(bin2c PRIVATE
   ${Boost_INCLUDE_DIR}
@@ -327,6 +337,7 @@ endif()
 add_library(libvis SHARED
   ${LIBVIS_FILES}
 )
+set_property(TARGET libvis PROPERTY FOLDER "libvis")
 
 #target_compile_definitions(libvis PUBLIC _USE_MATH_DEFINES)
 #target_compile_options(libvis PUBLIC "/WX /O2 /wd4068 /MP")
@@ -412,6 +423,7 @@ add_library(libvis_external_io SHARED
   
   libvis/third_party/tinyxml2/tinyxml2.cpp
 )
+set_property(TARGET libvis_external_io PROPERTY FOLDER "libvis")
 target_compile_options(libvis_external_io PRIVATE
   "${LIBVIS_WARNING_OPTIONS}"
 )
@@ -445,6 +457,7 @@ if (CMAKE_CUDA_COMPILER)
     libvis/src/libvis/cuda/pixel_corner_projector.cuh
     libvis/src/libvis/cuda/pixel_corner_projector.h
   )
+  set_property(TARGET libvis_cuda PROPERTY FOLDER "libvis")
   target_include_directories(libvis_cuda PUBLIC
     ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
     ${OpenCV_INCLUDE_DIRS}
@@ -481,6 +494,7 @@ add_executable(libvis_test
   libvis/src/libvis/test/point_cloud.cc
   libvis/src/libvis/test/util.cc
 )
+set_property(TARGET libvis_test PROPERTY FOLDER "libvis")
 target_link_libraries(libvis_test PRIVATE
   gtest_main
   Threads::Threads
