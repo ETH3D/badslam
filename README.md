@@ -65,7 +65,7 @@ then your dbus library is too old. This can be fixed by downloading a recent ver
 
 ## Building ##
 
-Building has been tested on Ubuntu 14.04 and Ubuntu 18.04 (with gcc), and on Windows (with Visual Studio 2019).
+Building has been tested on Ubuntu 14.04 and Ubuntu 18.04 (with gcc), and on Windows (with Visual Studio 2019 and 2017).
 
 The following external dependencies are required.
 
@@ -78,7 +78,7 @@ The following external dependencies are required.
 | [g2o](https://github.com/RainerKuemmerle/g2o) |  |
 | [GLEW](http://glew.sourceforge.net/build.html) |  |
 | [GTest](https://github.com/google/googletest) |  |
-| [OpenCV](https://opencv.org/) | 3.1.0, 3.2.0, 3.4.5; 4.x does NOT work without changes |
+| [OpenCV](https://opencv.org/) | 3.1.0, 3.2.0, 3.4.5, 3.4.6; 4.x does NOT work without changes |
 | [OpenGV](https://github.com/laurentkneip/opengv) |  |
 | [Qt](https://www.qt.io/) | 5.12.0; minimum version: 5.8 |
 | [SuiteSparse](http://faculty.cse.tamu.edu/davis/suitesparse.html) |  |
