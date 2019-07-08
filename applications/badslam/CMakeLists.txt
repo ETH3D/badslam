@@ -149,6 +149,7 @@ if (CMAKE_CUDA_COMPILER)
   
   # Unit test.
   add_executable(badslam_test
+    src/badslam/test/main.cc
     src/badslam/test/test_geometry_optimization_geometric_residual.cc
     src/badslam/test/test_geometry_optimization_photometric_residual.cc
     src/badslam/test/test_intrinsics_optimization_geometric_residual.cc
@@ -169,7 +170,7 @@ if (CMAKE_CUDA_COMPILER)
   )
   target_link_libraries(badslam_test PRIVATE
     badslam_baselib
-    gtest_main
+    gtest
     Threads::Threads
     ${X11_LIBRARIES}
   )

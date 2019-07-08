@@ -37,7 +37,6 @@
 #include <libvis/mesh.h>
 #include <libvis/mesh_opengl.h>
 #include <libvis/renderer.h>
-#include <QApplication>
 
 #include "badslam/cuda_depth_processing.cuh"
 #include "badslam/direct_ba.h"
@@ -282,11 +281,6 @@ TEST(Optimization, PairwiseFrameTracking) {
   srand(0);
   
   std::mt19937 generator(/*seed*/ 0);
-  
-  // The QApplication is required if using libvis' Qt implementation for OpenGL contexts.
-  int argc = 0;
-  char** argv = nullptr;
-  QApplication qapp(argc, argv);
   
   // Initialize and switch to an OpenGL context.
   OpenGLContext opengl_context;
