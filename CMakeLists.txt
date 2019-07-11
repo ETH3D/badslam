@@ -493,12 +493,13 @@ add_executable(libvis_test
   libvis/src/libvis/test/image.cc
   libvis/src/libvis/test/image_cache.cc
   libvis/src/libvis/test/lm_optimizer.cc
+  libvis/src/libvis/test/main.cc
   libvis/src/libvis/test/point_cloud.cc
   libvis/src/libvis/test/util.cc
 )
 set_property(TARGET libvis_test PROPERTY FOLDER "libvis")
 target_link_libraries(libvis_test PRIVATE
-  gtest_main
+  gtest
   Threads::Threads
   libvis
   cublas  # TODO: currently required because of lm_optimizer.h. That should not be necessary.
