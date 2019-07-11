@@ -364,8 +364,6 @@ __forceinline__ __device__ bool SurfelProjectsToAssociatedPixel(
 __forceinline__ __device__ bool AnySurfelProjectsToAssociatedPixel(
     unsigned int* surfel_index,
     const SurfelProjectionParameters& surfel_projection,
-    int* have_visible,
-    int* have_visible_2,
     bool* visible,
     SurfelProjectionResult6* result) {
   *visible = *surfel_index < surfel_projection.surfels_size;
@@ -393,22 +391,7 @@ __forceinline__ __device__ bool AnySurfelProjectsToAssociatedPixel(
   // Early exit if all threads within the block (!) have invisible surfels.
   // Checking for invisible threads within the warp (using __all(), for example)
   // is not sufficient since we do block-wide collective operations later.
-  
-  // TODO: Use an array have_visible[2] and use the condition threadIdx.x <= 1
-  //       here such that the values can be written by threads 0 and 1 at the
-  //       same time without complicating the if condition (or eliminate the
-  //       if by using have_visible[threadIdx.x & 1] = 0;)
-  if (threadIdx.x == 0) {
-    *have_visible = 0;
-    *have_visible_2 = 0;
-  }
-  __syncthreads();
-  
-  if (*visible) {
-    *have_visible = 1;
-  }
-  __syncthreads();
-  if (*have_visible == 0) {
+  if (__syncthreads_or(*visible) == 0) {
     return false;
   }
   
@@ -423,11 +406,7 @@ __forceinline__ __device__ bool AnySurfelProjectsToAssociatedPixel(
   }
   
   // Second early exit test (see above)
-  if (*visible) {
-    *have_visible_2 = 1;
-  }
-  __syncthreads();
-  if (*have_visible_2 == 0) {
+  if (__syncthreads_or(*visible) == 0) {
     return false;
   }
   

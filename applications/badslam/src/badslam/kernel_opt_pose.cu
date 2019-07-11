@@ -262,11 +262,9 @@ __global__ void AccumulatePoseEstimationCoeffsCUDAKernel(
     CUDABuffer_<float> b_buffer) {
   unsigned int surfel_index = blockIdx.x * blockDim.x + threadIdx.x;
 
-  __shared__ int have_visible;
-  __shared__ int have_visible_2;
   bool visible;
   SurfelProjectionResult6 r;
-  if (!AnySurfelProjectsToAssociatedPixel(&surfel_index, s, &have_visible, &have_visible_2, &visible, &r)) {
+  if (!AnySurfelProjectsToAssociatedPixel(&surfel_index, s, &visible, &r)) {
     return;
   }
   
