@@ -48,6 +48,21 @@ if (CMAKE_CUDA_COMPILER)
     PUBLIC
       ${LIBVIS_WARNING_OPTIONS}
   )
+
+    target_compile_options(badslam_baselib
+      PUBLIC
+        # NOTE: The -march=native was required to be able to use opengv, otherwise
+        #       it would just crash when calling an opengv function. I suspect
+        #       that it might be because the Eigen objects passed to opengv might
+        #       be compiled to have different layouts then, but this is only a
+        #       guess.
+        # NOTE: g2o also needs to be built with the same setting (it defaults
+        #       to not use -march=native at the moment).
+        $<$<COMPILE_LANGUAGE:CUDA>:-use_fast_math>
+        $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
+        # NOTE: Uncomment the line below if using cuda-memcheck
+        # $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler -rdynamic -lineinfo>
+    )
   if (NOT MSVC)
     target_compile_options(badslam_baselib
       PUBLIC
@@ -59,11 +74,12 @@ if (CMAKE_CUDA_COMPILER)
         # NOTE: g2o also needs to be built with the same setting (it defaults
         #       to not use -march=native at the moment).
         $<$<COMPILE_LANGUAGE:CXX>:-march=native>
-        $<$<COMPILE_LANGUAGE:CUDA>:-use_fast_math>
-        $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
-        # NOTE: Uncomment the line below if using cuda-memcheck
-        # $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler -rdynamic -lineinfo>
-    )
+	)
+    else()
+    target_compile_options(badslam_baselib
+      PUBLIC
+        $<$<COMPILE_LANGUAGE:CXX>:/fp:fast>
+	)
   endif()
   target_include_directories(badslam_baselib
     PRIVATE
