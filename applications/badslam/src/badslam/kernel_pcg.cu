@@ -769,30 +769,26 @@ __global__ void PCGStep1CUDAKernel(
       }
     }
     
-    sum *= weight;
-    
     constexpr int block_height = 1;
     typedef cub::BlockReduce<PCGScalar, block_width, cub::BLOCK_REDUCE_RAKING_COMMUTATIVE_ONLY, block_height> BlockReduceScalar;
     __shared__ typename BlockReduceScalar::TempStorage scalar_storage;
     
-    PCGScalar alpha_d_term = 0;
+    BlockedAtomicSum<block_width, block_height>(
+        &pcg_alpha_d(0, 0), sum * weight * sum, visible, &scalar_storage);
+    sum *= weight;
     
     if (visible && optimize_geometry) {
       pcg_g(0, surfel_unknown_start_index + (use_descriptor_residuals ? 3 : 1) * surfel_index + 0) += geometry_jacobian * sum;
-      alpha_d_term += geometry_jacobian * pcg_p(0, surfel_unknown_start_index + (use_descriptor_residuals ? 3 : 1) * surfel_index + 0);  // TODO: Cache value from pcg_p?
     }
     
     if (optimize_poses) {
       #pragma unroll
       for (int i = 0; i < 6; ++ i) {
-        if (i > 0) {
-          __syncthreads();
-        }
+        __syncthreads();
         BlockedAtomicSum<block_width, block_height>(
             &pcg_g(0, kf_pose_unknown_index + i),
             pose_jacobian[i] * sum,
             visible, &scalar_storage);
-        alpha_d_term += pose_jacobian[i] * pcg_p(0, kf_pose_unknown_index + i);  // TODO: Cache values from pcg_p?
       }
     }
     
@@ -804,19 +800,13 @@ __global__ void PCGStep1CUDAKernel(
             &pcg_g(0, depth_intrinsics_unknown_start_index + i),
             depth_global_intrinsics_jacobian[i] * sum,
             visible && depth_intrinsics_jac_valid, &scalar_storage);
-        alpha_d_term += depth_intrinsics_jac_valid ? (depth_global_intrinsics_jacobian[i] * pcg_p(0, depth_intrinsics_unknown_start_index + i)) : 0;  // TODO: Cache values from pcg_p?
       }
       if (visible && depth_intrinsics_jac_valid) {
         atomicAddFloatOrDouble(
             &pcg_g(0, cfactor_entry_index),
             cfactor_entry_jacobian * sum);
       }
-      alpha_d_term += depth_intrinsics_jac_valid ? (cfactor_entry_jacobian * pcg_p(0, cfactor_entry_index)) : 0;  // TODO: Cache values from pcg_p?
     }
-    
-    __syncthreads();
-    BlockedAtomicSum<block_width, block_height>(
-        &pcg_alpha_d(0, 0), sum * alpha_d_term, visible, &scalar_storage);
   }
   
   // --- Descriptor residual ---
@@ -984,54 +974,39 @@ __global__ void PCGStep1CUDAKernel(
       sum_2 += color_intrinsics_jacobian_2[3] * p;
     }
     
-    sum_1 *= weight_1;
-    sum_2 *= weight_2;
-    
     constexpr int block_height = 1;
     typedef cub::BlockReduce<PCGScalar, block_width, cub::BLOCK_REDUCE_RAKING_COMMUTATIVE_ONLY, block_height> BlockReduceScalar;
     __shared__ typename BlockReduceScalar::TempStorage scalar_storage;
     
-    PCGScalar alpha_d_term_1 = 0;
-    PCGScalar alpha_d_term_2 = 0;
+    BlockedAtomicSum<block_width, block_height>(
+        &pcg_alpha_d(0, 0), sum_1 * weight_1 * sum_1 + sum_2 * weight_2 * sum_2, visible, &scalar_storage);
+    sum_1 *= weight_1;
+    sum_2 *= weight_2;
     
     // Jacobians wrt. position changes and wrt. descriptor changes:
     if (visible && optimize_geometry) {
       pcg_g(0, surfel_unknown_start_index + 3 * surfel_index + 0) +=
           geometry_jacobian_1 * sum_1 +
           geometry_jacobian_2 * sum_2;
-      PCGScalar p = pcg_p(0, surfel_unknown_start_index + 3 * surfel_index + 0);  // TODO: Cache value from pcg_p?
-      alpha_d_term_1 += geometry_jacobian_1 * p;
-      alpha_d_term_2 += geometry_jacobian_2 * p;
       
       pcg_g(0, surfel_unknown_start_index + 3 * surfel_index + 1) +=
           descriptor1_jacobian_1 * sum_1 +
           descriptor1_jacobian_2 * sum_2;
-      p = pcg_p(0, surfel_unknown_start_index + 3 * surfel_index + 1);  // TODO: Cache value from pcg_p?
-      alpha_d_term_1 += descriptor1_jacobian_1 * p;
-      // descriptor1_jacobian_2 is zero
       
       pcg_g(0, surfel_unknown_start_index + 3 * surfel_index + 2) +=
           descriptor2_jacobian_1 * sum_1 +
           descriptor2_jacobian_2 * sum_2;
-      p = pcg_p(0, surfel_unknown_start_index + 3 * surfel_index + 2);  // TODO: Cache value from pcg_p?
-      // descriptor2_jacobian_1 is zero
-      alpha_d_term_2 += descriptor2_jacobian_2 * p;
     }
     
     if (optimize_poses) {
       #pragma unroll
       for (int i = 0; i < 6; ++ i) {
-        if (i > 0) {
-          __syncthreads();
-        }
+        __syncthreads();
         BlockedAtomicSum<block_width, block_height>(
             &pcg_g(0, kf_pose_unknown_index + i),
             pose_jacobian_1[i] * sum_1 +
             pose_jacobian_2[i] * sum_2,
             visible, &scalar_storage);
-        PCGScalar p = pcg_p(0, kf_pose_unknown_index + i);  // TODO: Cache values from pcg_p?
-        alpha_d_term_1 += pose_jacobian_1[i] * p;
-        alpha_d_term_2 += pose_jacobian_2[i] * p;
       }
     }
     
@@ -1044,15 +1019,8 @@ __global__ void PCGStep1CUDAKernel(
             color_intrinsics_jacobian_1[i] * sum_1 +
             color_intrinsics_jacobian_2[i] * sum_2,
             visible, &scalar_storage);
-        PCGScalar p = pcg_p(0, color_intrinsics_unknown_start_index + i);  // TODO: Cache values from pcg_p?
-        alpha_d_term_1 += color_intrinsics_jacobian_1[i] * p;
-        alpha_d_term_2 += color_intrinsics_jacobian_2[i] * p;
       }
     }
-    
-    __syncthreads();
-    BlockedAtomicSum<block_width, block_height>(
-        &pcg_alpha_d(0, 0), sum_1 * alpha_d_term_1 + sum_2 * alpha_d_term_2, visible, &scalar_storage);
   }
 }
 
