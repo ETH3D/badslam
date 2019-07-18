@@ -453,7 +453,11 @@ MainWindow::~MainWindow() {
   // Wait for the thread to exit
   unique_lock<mutex> quit_lock(run_mutex_);
   while (!quit_done_) {
-    quit_condition_.wait(quit_lock);
+    // Since the thread might still emit queued events, we need to process them
+    // to avoid possible deadlocks.
+    quit_lock.unlock();
+    qApp->processEvents();
+    quit_lock.lock();
   }
   quit_lock.unlock();
   
