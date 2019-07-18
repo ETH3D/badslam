@@ -120,8 +120,6 @@ __global__ void AssignColorsCUDAKernel(
       u8 b = 255.f * surfels(kSurfelAccum3, surfel_index) / observation_count + 0.5f;
       u8 gradmag = 255.f * surfels(kSurfelAccum4, surfel_index) / observation_count + 0.5f;
       SurfelSetColor(&surfels, surfel_index, make_uchar4(r, g, b, gradmag));
-    } else {
-      SurfelSetColor(&surfels, surfel_index, make_uchar4(0, 0, 0, 0));
     }
   }
 }
@@ -255,8 +253,6 @@ __global__ void AssignDescriptorColorsCUDAKernel(
       color.z = 127;
       color.w = 0;
       SurfelSetColor(&surfels, surfel_index, color);
-    } else {
-      SurfelSetColor(&surfels, surfel_index, make_uchar4(0, 0, 0, 0));
     }
   }
 }
