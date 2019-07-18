@@ -100,6 +100,15 @@ class RendererProgram<RadtanCamera8d> : public RendererProgramBase {
 };
 
 template <>
+class RendererProgram<RadtanCamera9d> : public RendererProgramBase {
+ public:
+  const GLchar* GetShaderUniformDefinitions() const override;
+  const GLchar* GetShaderDistortionCode() const override;
+  void GetUniformLocations(const ShaderProgramOpenGL& /*shader_program*/) override;
+  void SetUniformValues(const RadtanCamera9d& /*camera*/) const;
+};
+
+template <>
 class RendererProgram<ThinPrismFisheyeCamera12d> : public RendererProgramBase {
  public:
   const GLchar* GetShaderUniformDefinitions() const override;

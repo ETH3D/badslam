@@ -28,6 +28,7 @@
 
 // Must be included before Qt includes to avoid "foreach" conflict
 #include "badslam/input_realsense.h"
+#include "badslam/input_structure.h"
 #include "badslam/input_azurekinect.h"
 
 #include "badslam/gui_main_window.h"
@@ -1546,12 +1547,16 @@ void MainWindow::WorkerThreadMain() {
   // TODO: This duplicates a lot of code from main.cc, de-duplicate this!
   
   RealSenseInputThread rs_input;
+  StructureInputThread structure_input;
   K4AInputThread k4a_input;
-  int live_input = 0; // 1 realsense, 2 k4a
+  int live_input = 0; // 1 realsense, 2 k4a, 3 structure
   
   if (dataset_folder_path_ == string("live://realsense")) {
     rs_input.Start(&rgbd_video_, &depth_scaling_);
     live_input = 1;
+  } else if (dataset_folder_path_ == string("live://structure")) {
+    structure_input.Start(&rgbd_video_, &depth_scaling_, config_);
+    live_input = 3;
   } else if (dataset_folder_path_ == "live://k4a") {
     k4a_input.Start(
         &rgbd_video_, 
@@ -1785,6 +1790,8 @@ void MainWindow::WorkerThreadMain() {
       rs_input.GetNextFrame();
     } else if (live_input == 2) {
       k4a_input.GetNextFrame();
+    } else if (live_input == 3) {
+      structure_input.GetNextFrame();
     }
     
     // Get the current RGB-D frame's RGB and depth images. This may wait for I/O

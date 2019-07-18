@@ -105,10 +105,22 @@ void TestUnprojectProjectIsIdentity(const CameraT& test_camera) {
 
 // Tests that unprojection followed by projection equals the identity function.
 TEST(Camera, UnprojectProjectIsIdentity) {
+  LOG(INFO) << "Model: PinholeCamera4f";
   float pinhole_parameters[4] = {120, 120, 120, 120};  // fx, fy, cx, cy.
   PinholeCamera4f pinhole_camera(240, 240, pinhole_parameters);
   TestUnprojectProjectIsIdentity(pinhole_camera);
   
+  LOG(INFO) << "Model: RadtanCamera8d";
+  double radtan8_parameters[8] = {0.01, 0.02, 0.003, 0.002, 120, 120, 120, 120};
+  RadtanCamera8d radtan8_camera(240, 240, radtan8_parameters);
+  TestUnprojectProjectIsIdentity(radtan8_camera);
+  
+  LOG(INFO) << "Model: RadtanCamera9d";
+  double radtan9_parameters[9] = {0.01, 0.02, -0.015, 0.003, 0.002, 120, 120, 120, 120};
+  RadtanCamera9d radtan9_camera(240, 240, radtan9_parameters);
+  TestUnprojectProjectIsIdentity(radtan9_camera);
+  
+  LOG(INFO) << "Model: ThinPrismFisheyeCamera12d";
   double thin_prism_fisheye_parameters[12] = {0.01, 0.02, -0.024, 0.003, 0.002, -0.001, 0.005, -0.006, 120, 120, 120, 120};
   ThinPrismFisheyeCamera12d thin_prism_fisheye_camera(240, 240, thin_prism_fisheye_parameters);
   TestUnprojectProjectIsIdentity(thin_prism_fisheye_camera);

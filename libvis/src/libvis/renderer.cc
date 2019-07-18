@@ -189,6 +189,29 @@ void RendererProgram<RadtanCamera8d>::SetUniformValues(
 
 
 const GLchar*
+RendererProgram<RadtanCamera9d>::GetShaderUniformDefinitions() const {
+  LOG(FATAL) << "Not implemented yet";
+  return "";
+}
+
+const GLchar*
+RendererProgram<RadtanCamera9d>::GetShaderDistortionCode() const {
+  LOG(FATAL) << "Not implemented yet";
+  return "";
+}
+
+void RendererProgram<RadtanCamera9d>::GetUniformLocations(
+    const ShaderProgramOpenGL& /*shader_program*/) {
+  LOG(FATAL) << "Not implemented yet";
+}
+
+void RendererProgram<RadtanCamera9d>::SetUniformValues(
+    const RadtanCamera9d& /*camera*/) const {
+  LOG(FATAL) << "Not implemented yet";
+}
+
+
+const GLchar*
 RendererProgram<ThinPrismFisheyeCamera12d>::GetShaderUniformDefinitions() const {
   LOG(FATAL) << "Not implemented yet";
   return "";
