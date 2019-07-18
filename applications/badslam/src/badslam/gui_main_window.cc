@@ -694,6 +694,7 @@ void MainWindow::ShowCurrentFrameImages() {
   layout->setContentsMargins(0, 0, 0, 0);
   layout->addWidget(tab_widget);
   current_frame_images_dialog->setLayout(layout);
+  current_frame_images_dialog->resize(current_frame_images_dialog->sizeHint());
   
   current_frame_images_dialog->show();
   show_current_frame_images_act->setChecked(true);
@@ -780,6 +781,7 @@ void MainWindow::ShowIntrinsicsAndDepthDeformation() {
   layout->addWidget(depth_deformation_display);
   
   intrinsics_dialog->setLayout(layout);
+  intrinsics_dialog->resize(2 * intrinsics_dialog->sizeHint());
   intrinsics_dialog->show();
   show_intrinsics_act->setChecked(true);
   
