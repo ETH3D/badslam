@@ -509,6 +509,7 @@ void SettingsDialog::ChooseDatasetClicked() {
     return;
   }
   dataset_path_edit->setText(dataset_path);
+  settings.setValue("dataset_path", *this->dataset_path);
 }
 
 void SettingsDialog::RealSenseLiveInputClicked() {
@@ -579,7 +580,6 @@ void SettingsDialog::OkClicked() {
 }
 
 bool SettingsDialog::ParseSettings() {
-  QSettings settings;
   bool ok = true;
   
   auto report_error = [&](const QString& option_name, const QString& invalid_value) {
@@ -592,7 +592,7 @@ bool SettingsDialog::ParseSettings() {
     return false;
   }
   *this->dataset_path = dataset_path_edit->text();
-  settings.setValue("dataset_path", *this->dataset_path);
+  
   if (!this->dataset_path->startsWith("live://")) {
     boost::filesystem::path dataset_path = this->dataset_path->toStdString();
     if (!boost::filesystem::exists(dataset_path / "depth") ||
