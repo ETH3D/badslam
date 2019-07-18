@@ -379,6 +379,7 @@ MainWindow::MainWindow(
   horizontal_layout->addWidget(render_window_gl_->window());
   
   connect(&render_window_->signal_helper(), &BadSlamRenderWindowSignalHelper::ClickedKeyframe, this, &MainWindow::ClickedKeyframe);
+  connect(&render_window_->signal_helper(), &BadSlamRenderWindowSignalHelper::FollowCameraEnabled, follow_camera_act, &QAction::setChecked);
   
   QWidget* main_widget = new QWidget();
   main_widget->setLayout(horizontal_layout);
