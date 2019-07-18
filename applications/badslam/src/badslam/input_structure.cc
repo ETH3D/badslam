@@ -177,12 +177,16 @@ struct SessionDelegate : ST::CaptureSessionDelegate {
       
       // Add the frame to the queue
       unique_lock<mutex> lock(thread_->queue_mutex);
-      // If too many frames are queued, drop the frame
+      // If too many frames are queued, replace the last queued frame instead of
+      // pushing to the queue.
       // TODO: Add such a mechanism to all ImageInputs and make the number configurable in the settings
       constexpr int kMaxFramesInQueue = 2;
       if (thread_->depth_image_queue.size() < kMaxFramesInQueue) {
         thread_->depth_image_queue.push_back(depth_image);
         thread_->color_image_queue.push_back(color_image);
+      } else {
+        thread_->depth_image_queue.back() = depth_image;
+        thread_->color_image_queue.back() = color_image;
       }
       lock.unlock();
       thread_->new_frame_condition_.notify_all();
