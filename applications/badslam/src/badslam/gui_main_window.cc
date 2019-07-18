@@ -681,8 +681,6 @@ void MainWindow::ShowCurrentFrameImages() {
   current_frame_depth_display->FitContent();
   current_frame_depth_display->SetBlackWhiteValues(0, config_.max_depth / config_.raw_to_float_depth);
   
-  UpdateCurrentFrameImages(std::max(0, static_cast<int>(frame_index_) - 1), false);
-  
   // Tab widget with the images
   QTabWidget* tab_widget = new QTabWidget(current_frame_images_dialog);
   tab_widget->setElideMode(Qt::TextElideMode::ElideRight);
@@ -694,10 +692,6 @@ void MainWindow::ShowCurrentFrameImages() {
   layout->setContentsMargins(0, 0, 0, 0);
   layout->addWidget(tab_widget);
   current_frame_images_dialog->setLayout(layout);
-  current_frame_images_dialog->resize(current_frame_images_dialog->sizeHint());
-  
-  current_frame_images_dialog->show();
-  show_current_frame_images_act->setChecked(true);
   
   connect(current_frame_images_dialog, &QDialog::rejected, [&](){
     current_frame_images_dialog = nullptr;
@@ -705,6 +699,11 @@ void MainWindow::ShowCurrentFrameImages() {
     disconnect(this, &MainWindow::UpdateCurrentFrameImagesSignal, this, &MainWindow::UpdateCurrentFrameImages);
   });
   connect(this, &MainWindow::UpdateCurrentFrameImagesSignal, this, &MainWindow::UpdateCurrentFrameImages, Qt::BlockingQueuedConnection);
+  
+  show_current_frame_images_act->setChecked(true);
+  
+  // This will show the dialog once images are available
+  UpdateCurrentFrameImages(std::max(0, static_cast<int>(frame_index_) - 1), false);
 }
 
 void MainWindow::ShowIntrinsicsAndDepthDeformation() {
@@ -2062,6 +2061,10 @@ void MainWindow::UpdateCurrentFrameImages(int frame_index, bool images_in_use_el
     rgbd_video_.depth_frame_mutable(frame_index)->ClearImageAndDerivedData();
     
     rgbd_video_mutex_.unlock();
+  }
+  
+  if (!current_frame_images_dialog->isVisible()) {
+    current_frame_images_dialog->show();
   }
 }
 

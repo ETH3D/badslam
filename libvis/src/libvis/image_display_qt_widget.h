@@ -56,9 +56,13 @@ class ImageDisplayQtWidget : public QWidget
   // Sets the image displayed by the widget.
   template <typename T>
   void SetImage(const Image<T>& image) {
+    bool no_image_before = qimage_.isNull();
     image_ = image;
     UpdateQImage();
     UpdateViewTransforms();
+    if (no_image_before && !qimage_.isNull()) {
+      updateGeometry();
+    }
     update(rect());
   }
   
