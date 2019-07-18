@@ -49,7 +49,7 @@ bool ShowSettingsWindow(string* dataset_path, BadSlamConfig* config, bool* start
   
   SettingsDialog settings_dialog(&qdataset_path, config, start_paused);
   QSize bestSize = settings_dialog.sizeHint();
-  bestSize.setWidth(bestSize.width() * 2);
+  bestSize.setWidth(bestSize.width() * 1.75f);
   settings_dialog.resize(bestSize);
   if (settings_dialog.exec() == QDialog::Rejected) {
     return false;
