@@ -332,6 +332,7 @@ void StructureInputThread::Start(RGBDVideo<Vec3u8, u16>* rgbd_video, float* dept
   settings.structureCore.infraredAutoExposureEnabled = config.structure_infrared_auto_exposure;
   settings.structureCore.accelerometerEnabled = false;
   settings.structureCore.gyroscopeEnabled = false;
+  settings.structureCore.initialVisibleExposure = config.structure_visible_exposure_time;
   
   if (config.structure_one_shot_dynamic_calibration) {
     settings.structureCore.dynamicCalibrationMode = ST::StructureCoreDynamicCalibrationMode::OneShotPersistent;

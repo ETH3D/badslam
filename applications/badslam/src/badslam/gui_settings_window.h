@@ -131,6 +131,7 @@ class SettingsDialog : public QDialog {
   QCheckBox* structure_one_shot_dynamic_calibration_checkbox;
   QCheckBox* structure_infrared_auto_exposure_checkbox;
   QLineEdit* structure_depth_diff_threshold_edit;
+  QLineEdit* structure_visible_exposure_time_edit;
   
   // K4A settings
   QLineEdit* k4a_mode_edit;

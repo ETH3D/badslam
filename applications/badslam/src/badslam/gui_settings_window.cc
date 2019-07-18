@@ -403,6 +403,9 @@ SettingsDialog::SettingsDialog(QString* dataset_path, BadSlamConfig* config, boo
   structure_layout->addWidget(structure_infrared_auto_exposure_checkbox, row, 0, 1, 2);
   ++ row;
   
+  structure_visible_exposure_time_edit = new QLineEdit(QString::number(config->structure_visible_exposure_time));
+  add_option(tr("Fixed exposure time for visible camera [seconds]: "), structure_visible_exposure_time_edit, structure_layout, &row);
+  
   structure_layout->setRowStretch(row, 1);
   structure_tab->setLayout(structure_layout);
 #endif
@@ -734,6 +737,9 @@ bool SettingsDialog::ParseSettings() {
   if (!ok) { report_error("structure_depth_diff_threshold", structure_depth_diff_threshold_edit->text()); return false; }
   
   config->structure_infrared_auto_exposure = structure_infrared_auto_exposure_checkbox->isChecked();
+  
+  config->structure_visible_exposure_time = structure_visible_exposure_time_edit->text().toDouble(&ok);
+  if (!ok) { report_error("structure_visible_exposure_time", structure_visible_exposure_time_edit->text()); return false; }
 #endif
   
   

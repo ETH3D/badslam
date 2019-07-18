@@ -329,6 +329,10 @@ struct BadSlamConfig {
       "Whether to activate auto-exposure for infrared.";
   bool structure_infrared_auto_exposure = true;
   
+  static constexpr const char* structure_visible_exposure_time_help =
+      "Fixed exposure time for the visible camera (in seconds).";
+  float structure_visible_exposure_time = 0.016f;
+  
   
   // --- K4A parameters ---
   

@@ -389,6 +389,11 @@ int LIBVIS_QT_MAIN(int argc, char** argv) {
       "--no_structure_infrared_auto_exposure",
       bad_slam_config.structure_infrared_auto_exposure_help);
   
+  cmd_parser.NamedParameter(
+      "--structure_visible_exposure_time",
+      &bad_slam_config.structure_visible_exposure_time, /*required*/ false,
+      bad_slam_config.structure_visible_exposure_time_help);
+  
   
   // These sequential parameters must be specified last (in code).
   string dataset_folder_path;
