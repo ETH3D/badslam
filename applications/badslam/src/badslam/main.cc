@@ -385,8 +385,8 @@ int LIBVIS_QT_MAIN(int argc, char** argv) {
       &bad_slam_config.structure_depth_diff_threshold, /*required*/ false,
       bad_slam_config.structure_depth_diff_threshold_help);
   
-  bad_slam_config.structure_infrared_auto_exposure = cmd_parser.Flag(
-      "--structure_infrared_auto_exposure",
+  bad_slam_config.structure_infrared_auto_exposure = !cmd_parser.Flag(
+      "--no_structure_infrared_auto_exposure",
       bad_slam_config.structure_infrared_auto_exposure_help);
   
   
