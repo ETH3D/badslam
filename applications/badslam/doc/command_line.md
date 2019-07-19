@@ -112,6 +112,28 @@ A complete list of optional program arguments follows, grouped by category:
 
 * `--import_calibration` (default ""): Load the calibration from the given base path (as three files, with extensions .depth_intrinsics.txt, .color_intrinsics.txt, and .deformation.txt).
 
+#### Structure Core live input parameters ####
+
+* `--structure_depth_range` (default "Default"): Depth range setting. Supported values:
+  * "VeryShort" (0.35m to 0.92m)
+  * "Short" (0.41m to 1.36m)
+  * "Medium" (0.52m to 5.23m)
+  * "Long" (0.58m to 8.0m)
+  * "VeryLong" (0.58m to 10.0m)
+  * "Hybrid" (0.35m to 10.0m)
+  * "BodyScanning"
+  * "Default"
+* `--structure_depth_only`: If this flag is set, only depth, but no visible images will be streamed. The depth images will not be reprojected, only undistorted. If this flag is not set, both depth and visible images will be streamed, and the depth images will be reprojected to the visible image viewpoints.
+* `--structure_depth_resolution` (default 640x480): Resolution of the depth images. Attention, if both depth and visible images are streamed, then depth images will be reprojected to the visible images, such that high initial depth resolution will be lost. Use --structure_depth_only to disable depth reprojection (and use only depth images). Supported values:
+  * 320x240
+  * 640x480
+  * 1280x960
+* `--structure_expensive_correction`: Whether to use the 'expensive correction' for depth images from the Structure SDK. Note that BAD SLAM also applies some of its own depth filtering.
+* `--structure_one_shot_dynamic_calibration`: Whether to use the one-shot dynamic calibration from the Structure SDK that can compensate for static deformations of the sensor. This will delay the startup by 10 seconds.
+* `--structure_depth_diff_threshold` (default 0.05): Maximum difference between neighboring depth pixels (in meters) to be considered on the same surface for depth reprojection.
+* `--no_structure_infrared_auto_exposure`: Disables the auto-exposure for the infrared cameras.
+* `--structure_visible_exposure_time` (default 0.016): Sets the fixed exposure time for the visible camera (in seconds).
+
 #### Sequential parameters ####
 
 * The path to the dataset is given as first sequential parameter.
