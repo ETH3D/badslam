@@ -90,7 +90,8 @@ The following external dependencies are optional.
 
 | Dependency   | Purpose |
 | ------------ | ------- | 
-| [librealsense2](https://github.com/IntelRealSense/librealsense) | Live input from RealSense D400 series depth cameras. |
+| [librealsense2](https://github.com/IntelRealSense/librealsense) | Live input from RealSense D400 series depth cameras (tested with the D435 only). |
+| [Structure SDK](https://structure.io/developers) | Live input from Structure Core cameras (tested with the color version only). To use this, set the SCSDK_ROOT CMake variable to the SDK path. |
 | [k4a & k4arecord](https://github.com/Microsoft/Azure-Kinect-Sensor-SDK) | Live input from Azure Kinect cameras. |
 
 

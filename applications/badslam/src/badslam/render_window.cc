@@ -527,11 +527,18 @@ void BadSlamRenderWindow::RenderEstimatedTrajectory() {
 void BadSlamRenderWindow::MouseDown(MouseButton button, int x, int y) {
   pressed_mouse_buttons_ |= static_cast<int>(button);
   
+  // Deactivate the follow-camera if the 3D view is clicked, otherwise the view
+  // cannot be changed.
+  if (follow_camera_used()) {
+    UseFollowCamera(false);
+  }
+  
   if (button == MouseButton::kLeft ||
       button == MouseButton::kMiddle) {
     last_drag_x_ = x;
     last_drag_y_ = y;
   }
+  
   // TODO: Implement this functionality somewhere else (e.g., in the GUI keyframe dialog)
   //else if (button == MouseButton::kRight) {
 //     if (embedded_in_gui_) {
@@ -1215,6 +1222,7 @@ void BadSlamRenderWindow::PasteView() {
 
 void BadSlamRenderWindow::UseFollowCamera(bool enable) {
   use_follow_camera_ = enable;
+  signal_helper_.EmitFollowCameraEnabled(enable);
 }
 
 void BadSlamRenderWindow::ChangeSplatSize(int num_steps) {

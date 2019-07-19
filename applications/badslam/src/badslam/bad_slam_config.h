@@ -280,19 +280,74 @@ struct BadSlamConfig {
   static constexpr const char* loop_detection_images_height_help =
       "Height of the images used for loop detection (i.e., the color images).";
   int loop_detection_images_height = -1;
-
+  
+  
+  // --- Structure parameters ---
+  
+  static constexpr const char* structure_depth_range_help =
+      "Depth range setting. Supported values:"
+      " VeryShort (0.35m to 0.92m),"
+      " Short (0.41m to 1.36m),"
+      " Medium (0.52m to 5.23m),"
+      " Long (0.58m to 8.0m),"
+      " VeryLong (0.58m to 10.0m),"
+      " Hybrid (0.35m to 10.0m),"
+      " BodyScanning,"
+      " Default.";
+  string structure_depth_range = "Default";
+  
+  static constexpr const char* structure_depth_only_help =
+      "If this is set to true, only depth, but no visible images will be streamed."
+      " The depth images will not be reprojected, only undistorted."
+      " If this is set to false, both depth and visible images will be streamed,"
+      " and the depth images will be reprojected to the visible image viewpoints.";
+  bool structure_depth_only = false;
+  
+  static constexpr const char* structure_depth_resolution_help =
+      "Resolution of the depth images. Attention, if both depth and visible images"
+      " are streamed, then depth images will be reprojected to the visible images,"
+      " such that high initial depth resolution will be lost. Use --structure_depth_only"
+      " to disable depth reprojection (and use only depth images). Supported values:"
+      " 320x240, 640x480, 1280x960.";
+  string structure_depth_resolution = "640x480";
+  
+  static constexpr const char* structure_expensive_correction_help =
+      "Whether to use the 'expensive correction' for depth images from the"
+      "Structure SDK. Note that BAD SLAM also applies some of its own depth filtering.";
+  bool structure_expensive_correction = false;
+  
+  static constexpr const char* structure_one_shot_dynamic_calibration_help =
+      "Whether to use the one-shot dynamic calibration from the Structure SDK.";
+  bool structure_one_shot_dynamic_calibration = false;
+  
+  static constexpr const char* structure_depth_diff_threshold_help =
+      "Maximum difference between neighboring depth pixels to be considered on"
+      " the same surface for depth reprojection.";
+  float structure_depth_diff_threshold = 0.05;
+  
+  static constexpr const char* structure_infrared_auto_exposure_help =
+      "Whether to activate auto-exposure for infrared.";
+  bool structure_infrared_auto_exposure = true;
+  
+  static constexpr const char* structure_visible_exposure_time_help =
+      "Fixed exposure time for the visible camera (in seconds).";
+  float structure_visible_exposure_time = 0.016f;
+  
+  
+  // --- K4A parameters ---
+  
   static constexpr const char* k4a_mode_help = 
-	  "Operating modes for Azure Kinect: nfov,nfov2x2,wfov,wfov2x2 "
-	  "default: (narrow field of view) with resolution 640x576, fov 75°x65° and range 0.5m - 3.86m "
-	  "nfov2x2 was resolution 320x288, fov 75°x65° and range 0.5m - 5.46 "
-	  "wfov (wide field of view) has resolution 1024x1024,fov 120°x120° and range 0.25 - 2.21m "
-	  "wfov2x2  has resolution 512x512,fov 120°x120° and range 0.25 - 2.88m "
-	  "full specs at http://aka.ms/kinectdocs";
+      "Operating modes for Azure Kinect: nfov,nfov2x2,wfov,wfov2x2 "
+      "default: (narrow field of view) with resolution 640x576, fov 75°x65° and range 0.5m - 3.86m "
+      "nfov2x2 was resolution 320x288, fov 75°x65° and range 0.5m - 5.46 "
+      "wfov (wide field of view) has resolution 1024x1024,fov 120°x120° and range 0.25 - 2.21m "
+      "wfov2x2  has resolution 512x512,fov 120°x120° and range 0.25 - 2.88m "
+      "full specs at http://aka.ms/kinectdocs";
   string k4a_mode = "nfov";
 
-  static constexpr const char* k4a_fps_help 
-	  = "Azure Kinect frame per seconds: 30, 15, 5"
-	  " default: 30, not every combination of mode and resolution supports every fps";
+  static constexpr const char* k4a_fps_help =
+      "Azure Kinect frame per seconds: 30, 15, 5"
+      " default: 30, not every combination of mode and resolution supports every fps";
   int k4a_fps = 30;
 
   static constexpr const char* k4a_resolution_help = "Azure kinect resolution: default 720, can be 1080,1440,2160,3082,1536";
@@ -300,10 +355,13 @@ struct BadSlamConfig {
 
   static constexpr const char* k4a_factor_help = "Downscaling factor for Azure kinect images";
   int k4a_factor = 1;
+  
   static constexpr const char* k4a_use_depth_help = "When using this mode only the depth image plus reflectivity is used, without rgb";
   int k4a_use_depth = 0;
+  
   static constexpr const char* k4a_exposure_help = "Exposure for the rgb camera of Azure Kinect, default is 8000ms when 0 it's auto";
   int k4a_exposure = 8000;
+  
   
   inline float GetLoopDetectionImageFrequency() const {
     return (loop_detection_image_frequency != 0) ?

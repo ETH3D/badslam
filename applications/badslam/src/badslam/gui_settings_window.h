@@ -29,6 +29,7 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
 #include <libvis/libvis.h>
 #include <QDialog>
@@ -36,6 +37,7 @@
 #include <QLineEdit>
 #include <QCheckBox>
 #include <QLabel>
+#include <QComboBox>
 
 #include "badslam/bad_slam_config.h"
 
@@ -54,6 +56,7 @@ class SettingsDialog : public QDialog {
  public slots:
   void ChooseDatasetClicked();
   void RealSenseLiveInputClicked();
+  void StructureLiveInputClicked();
   void K4ALiveInputClicked();
   
   void StartClicked();
@@ -118,7 +121,18 @@ class SettingsDialog : public QDialog {
   QLineEdit* bilateral_filter_sigma_xy_edit;
   QLineEdit* bilateral_filter_radius_factor_edit;
   QLineEdit* bilateral_filter_sigma_inv_depth_edit;
-
+  
+  // Structure settings
+  QComboBox* structure_depth_range_combo;
+  vector<string> structure_depth_range_values;
+  QCheckBox* structure_depth_only_checkbox;
+  QComboBox* structure_depth_resolution_combo;
+  QCheckBox* structure_expensive_correction_checkbox;
+  QCheckBox* structure_one_shot_dynamic_calibration_checkbox;
+  QCheckBox* structure_infrared_auto_exposure_checkbox;
+  QLineEdit* structure_depth_diff_threshold_edit;
+  QLineEdit* structure_visible_exposure_time_edit;
+  
   // K4A settings
   QLineEdit* k4a_mode_edit;
   QLineEdit* k4a_fps_edit;

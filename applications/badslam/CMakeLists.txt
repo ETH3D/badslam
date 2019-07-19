@@ -1,4 +1,7 @@
 if (CMAKE_CUDA_COMPILER)
+  # Make CMake find the Find<Package>.cmake files in the cmake subdirectory.
+  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+  
   # Dependencies
   find_package(SuiteSparse REQUIRED)
   find_package(DLib REQUIRED)
@@ -24,6 +27,9 @@ if (CMAKE_CUDA_COMPILER)
   # Optional, only required for live Azure Kinect camera support
   find_package(k4a)
   find_package(k4arecord)
+  
+  # Optional, only required for live Structure Core camera support
+  find_package(Structure)
 
   set(CMAKE_CUDA_STANDARD 11)
   set(CMAKE_CUDA_STANDARD_REQUIRED ON)
@@ -111,6 +117,13 @@ if (CMAKE_CUDA_COMPILER)
 
   if(MSVC)
     target_compile_definitions(badslam_baselib PUBLIC NOMINMAX) # to get rid of max define
+  endif()
+  
+  if (TARGET StructurePrebuilt)
+    target_link_libraries(badslam_baselib PUBLIC
+      StructurePrebuilt
+    )
+    target_compile_definitions(badslam_baselib PUBLIC HAVE_STRUCTURE)
   endif()
 
   target_link_libraries(badslam_baselib

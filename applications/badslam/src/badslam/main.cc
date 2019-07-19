@@ -32,6 +32,7 @@
 // librealsense must be included before any Qt include because some foreach will
 // be misinterpreted otherwise
 #include "badslam/input_realsense.h"
+#include "badslam/input_structure.h"
 #include "badslam/input_azurekinect.h"
 
 #include <boost/filesystem.hpp>
@@ -356,6 +357,44 @@ int LIBVIS_QT_MAIN(int argc, char** argv) {
       " .deformation.txt). Applies to the command line mode only, not to the GUI.");
   
   
+  // Structure options.
+  cmd_parser.NamedParameter(
+      "--structure_depth_range",
+      &bad_slam_config.structure_depth_range, /*required*/ false,
+      bad_slam_config.structure_depth_range_help);
+  
+  bad_slam_config.structure_depth_only = cmd_parser.Flag(
+      "--structure_depth_only",
+      bad_slam_config.structure_depth_only_help);
+  
+  cmd_parser.NamedParameter(
+      "--structure_depth_resolution",
+      &bad_slam_config.structure_depth_resolution, /*required*/ false,
+      bad_slam_config.structure_depth_resolution_help);
+  
+  bad_slam_config.structure_expensive_correction = cmd_parser.Flag(
+      "--structure_expensive_correction",
+      bad_slam_config.structure_expensive_correction_help);
+  
+  bad_slam_config.structure_one_shot_dynamic_calibration = cmd_parser.Flag(
+      "--structure_one_shot_dynamic_calibration",
+      bad_slam_config.structure_one_shot_dynamic_calibration_help);
+  
+  cmd_parser.NamedParameter(
+      "--structure_depth_diff_threshold",
+      &bad_slam_config.structure_depth_diff_threshold, /*required*/ false,
+      bad_slam_config.structure_depth_diff_threshold_help);
+  
+  bad_slam_config.structure_infrared_auto_exposure = !cmd_parser.Flag(
+      "--no_structure_infrared_auto_exposure",
+      bad_slam_config.structure_infrared_auto_exposure_help);
+  
+  cmd_parser.NamedParameter(
+      "--structure_visible_exposure_time",
+      &bad_slam_config.structure_visible_exposure_time, /*required*/ false,
+      bad_slam_config.structure_visible_exposure_time_help);
+  
+  
   // These sequential parameters must be specified last (in code).
   string dataset_folder_path;
   cmd_parser.SequentialParameter(
@@ -416,6 +455,7 @@ int LIBVIS_QT_MAIN(int argc, char** argv) {
   
   // Load the dataset, respectively start the live input or show the GUI.
   RealSenseInputThread rs_input;
+  StructureInputThread structure_input;
   K4AInputThread k4a_input;
   RGBDVideo<Vec3u8, u16> rgbd_video;
   int live_input = 0;
@@ -448,6 +488,9 @@ int LIBVIS_QT_MAIN(int argc, char** argv) {
   } else if (dataset_folder_path == "live://realsense") {
     rs_input.Start(&rgbd_video, &depth_scaling);
     live_input = 1;
+  } else if (dataset_folder_path == "live://structure") {
+    structure_input.Start(&rgbd_video, &depth_scaling, bad_slam_config);
+    live_input = 3;
   } else if (dataset_folder_path == "live://k4a") {
     k4a_input.Start(&rgbd_video, 
         &depth_scaling, 
@@ -560,9 +603,10 @@ int LIBVIS_QT_MAIN(int argc, char** argv) {
     pre_load_thread.WaitUntilDone();
     if (live_input == 1) {
       rs_input.GetNextFrame();
-    }
-    else if (live_input == 2) {
+    } else if (live_input == 2) {
       k4a_input.GetNextFrame();
+    } else if (live_input == 3) {
+      structure_input.GetNextFrame();
     }
     
     // Get the current RGB-D frame's RGB and depth images. This may wait for I/O

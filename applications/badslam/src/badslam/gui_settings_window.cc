@@ -49,7 +49,7 @@ bool ShowSettingsWindow(string* dataset_path, BadSlamConfig* config, bool* start
   
   SettingsDialog settings_dialog(&qdataset_path, config, start_paused);
   QSize bestSize = settings_dialog.sizeHint();
-  bestSize.setWidth(bestSize.width() * 2);
+  bestSize.setWidth(bestSize.width() * 1.75f);
   settings_dialog.resize(bestSize);
   if (settings_dialog.exec() == QDialog::Rejected) {
     return false;
@@ -87,7 +87,13 @@ SettingsDialog::SettingsDialog(QString* dataset_path, BadSlamConfig* config, boo
   connect(realsense_button, &QPushButton::clicked, this, &SettingsDialog::RealSenseLiveInputClicked);
   dataset_layout->addWidget(realsense_button);
 #endif
-
+  
+#ifdef HAVE_STRUCTURE
+  QPushButton* structure_button = new QPushButton(tr("Structure live input"));
+  connect(structure_button, &QPushButton::clicked, this, &SettingsDialog::StructureLiveInputClicked);
+  dataset_layout->addWidget(structure_button);
+#endif
+  
 #ifdef HAVE_K4A
   QPushButton* k4a_button = new QPushButton(tr("K4A live input"));
   connect(k4a_button, &QPushButton::clicked, this, &SettingsDialog::K4ALiveInputClicked);
@@ -315,7 +321,96 @@ SettingsDialog::SettingsDialog(QString* dataset_path, BadSlamConfig* config, boo
   
   depth_preprocessing_layout->setRowStretch(row, 1);
   depth_preprocessing_tab->setLayout(depth_preprocessing_layout);
-
+  
+  
+  // Settings tab: Structure
+#ifdef HAVE_STRUCTURE
+  QWidget* structure_tab = new QWidget();
+  QGridLayout* structure_layout = new QGridLayout();
+  row = 0;
+  
+  structure_layout->addWidget(new QLabel(tr("Depth range: ")), row, 0);
+  structure_depth_range_combo = new QComboBox();
+  structure_depth_range_combo->addItem(tr("Default"));
+  structure_depth_range_values.push_back("Default");
+  structure_depth_range_combo->addItem(tr("BodyScanning"));
+  structure_depth_range_values.push_back("BodyScanning");
+  structure_depth_range_combo->addItem(tr("VeryShort (0.35m to 0.92m)"));
+  structure_depth_range_values.push_back("VeryShort");
+  structure_depth_range_combo->addItem(tr("Short (0.41m to 1.36m)"));
+  structure_depth_range_values.push_back("Short");
+  structure_depth_range_combo->addItem(tr("Medium (0.52m to 5.23m)"));
+  structure_depth_range_values.push_back("Medium");
+  structure_depth_range_combo->addItem(tr("Long (0.58m to 8.0m)"));
+  structure_depth_range_values.push_back("Long");
+  structure_depth_range_combo->addItem(tr("VeryLong (0.58m to 10.0m)"));
+  structure_depth_range_values.push_back("VeryLong");
+  structure_depth_range_combo->addItem(tr("Hybrid (0.35m to 10.0m)"));
+  structure_depth_range_values.push_back("Hybrid");
+  bool found = false;
+  for (usize i = 0; i < structure_depth_range_values.size(); ++ i) {
+    if (config->structure_depth_range == structure_depth_range_values[i]) {
+      structure_depth_range_combo->setCurrentIndex(i);
+      found = true;
+      break;
+    }
+  }
+  if (!found) {
+    LOG(ERROR) << "Did not find the given Structure depth range, choosing Default instead.";
+    structure_depth_range_combo->setCurrentIndex(0);
+  }
+  structure_layout->addWidget(structure_depth_range_combo, row, 1);
+  ++ row;
+  
+  structure_depth_only_checkbox = new QCheckBox(tr("Stream only depth (without reprojection), but not visible images"));
+  structure_depth_only_checkbox->setChecked(config->structure_depth_only);
+  structure_layout->addWidget(structure_depth_only_checkbox, row, 0, 1, 2);
+  ++ row;
+  
+  structure_layout->addWidget(new QLabel(tr("Depth resolution (only relevant if depth-only stream): ")), row, 0);
+  structure_depth_resolution_combo = new QComboBox();
+  structure_depth_resolution_combo->addItem("320x240");
+  structure_depth_resolution_combo->addItem("640x480");
+  structure_depth_resolution_combo->addItem("1280x960");
+  if (config->structure_depth_resolution == string("320x240")) {
+    structure_depth_resolution_combo->setCurrentIndex(0);
+  } else if (config->structure_depth_resolution == string("640x480")) {
+    structure_depth_resolution_combo->setCurrentIndex(1);
+  } else if (config->structure_depth_resolution == string("1280x960")) {
+    structure_depth_resolution_combo->setCurrentIndex(2);
+  } else {
+    LOG(ERROR) << "Did not find the given Structure depth resolution, choosing 640x480 instead.";
+    structure_depth_range_combo->setCurrentIndex(1);
+  }
+  structure_layout->addWidget(structure_depth_resolution_combo, row, 1);
+  ++ row;
+  
+  structure_expensive_correction_checkbox = new QCheckBox(tr("Use the Structure SDK's 'expensive correction' for depth images"));
+  structure_expensive_correction_checkbox->setChecked(config->structure_expensive_correction);
+  structure_layout->addWidget(structure_expensive_correction_checkbox, row, 0, 1, 2);
+  ++ row;
+  
+  structure_one_shot_dynamic_calibration_checkbox = new QCheckBox(tr("Use the Structure SDK's one-shot dynamic calibration"));
+  structure_one_shot_dynamic_calibration_checkbox->setChecked(config->structure_one_shot_dynamic_calibration);
+  structure_layout->addWidget(structure_one_shot_dynamic_calibration_checkbox, row, 0, 1, 2);
+  ++ row;
+  
+  structure_depth_diff_threshold_edit = new QLineEdit(QString::number(config->structure_depth_diff_threshold));
+  add_option(tr("Depth difference threshold for continuous reprojection: "), structure_depth_diff_threshold_edit, structure_layout, &row);
+  
+  structure_infrared_auto_exposure_checkbox = new QCheckBox(tr("Infrared auto exposure"));
+  structure_infrared_auto_exposure_checkbox->setChecked(config->structure_infrared_auto_exposure);
+  structure_layout->addWidget(structure_infrared_auto_exposure_checkbox, row, 0, 1, 2);
+  ++ row;
+  
+  structure_visible_exposure_time_edit = new QLineEdit(QString::number(config->structure_visible_exposure_time));
+  add_option(tr("Fixed exposure time for visible camera [seconds]: "), structure_visible_exposure_time_edit, structure_layout, &row);
+  
+  structure_layout->setRowStretch(row, 1);
+  structure_tab->setLayout(structure_layout);
+#endif
+  
+  
   // Settings tab: K4A preprocessing
 #ifdef HAVE_K4A
   QWidget* k4a_tab = new QWidget();
@@ -355,6 +450,9 @@ SettingsDialog::SettingsDialog(QString* dataset_path, BadSlamConfig* config, boo
   tab_widget->addTab(ba_tab, tr("Bundle Adjustment"));
   tab_widget->addTab(loop_closure_tab, tr("Loop closure"));
   tab_widget->addTab(memory_tab, tr("Memory"));
+#ifdef HAVE_STRUCTURE
+  tab_widget->addTab(structure_tab, tr("Structure"));
+#endif
 #ifdef HAVE_K4A
   tab_widget->addTab(k4a_tab, tr("Azure Kinect"));
 #endif
@@ -414,6 +512,7 @@ void SettingsDialog::ChooseDatasetClicked() {
     return;
   }
   dataset_path_edit->setText(dataset_path);
+  settings.setValue("dataset_path", *this->dataset_path);
 }
 
 void SettingsDialog::RealSenseLiveInputClicked() {
@@ -431,6 +530,22 @@ void SettingsDialog::RealSenseLiveInputClicked() {
     restrict_fps_to_edit->setText("0");
   }
 }
+
+void SettingsDialog::StructureLiveInputClicked() {
+  dataset_path_edit->setText("live://structure");
+  
+  if (QMessageBox::question(
+      this,
+      tr("Structure live input"),
+      tr("Set recommended default settings for Structure Core live input?"
+         " This will set --bilateral_filter_sigma_inv_depth to 0.0075, --max_depth to 10, and --fps_restriction to 0."),
+      QMessageBox::StandardButton::Yes | QMessageBox::StandardButton::No) == QMessageBox::StandardButton::Yes) {
+    bilateral_filter_sigma_inv_depth_edit->setText("0.0075");
+    max_depth_edit->setText("10");
+    restrict_fps_to_edit->setText("0");
+  }
+}
+
 void SettingsDialog::K4ALiveInputClicked() {
   dataset_path_edit->setText("live://k4a");
 
@@ -468,7 +583,6 @@ void SettingsDialog::OkClicked() {
 }
 
 bool SettingsDialog::ParseSettings() {
-  QSettings settings;
   bool ok = true;
   
   auto report_error = [&](const QString& option_name, const QString& invalid_value) {
@@ -481,7 +595,7 @@ bool SettingsDialog::ParseSettings() {
     return false;
   }
   *this->dataset_path = dataset_path_edit->text();
-  settings.setValue("dataset_path", *this->dataset_path);
+  
   if (!this->dataset_path->startsWith("live://")) {
     boost::filesystem::path dataset_path = this->dataset_path->toStdString();
     if (!boost::filesystem::exists(dataset_path / "depth") ||
@@ -605,7 +719,30 @@ bool SettingsDialog::ParseSettings() {
   
   config->bilateral_filter_sigma_inv_depth = bilateral_filter_sigma_inv_depth_edit->text().toDouble(&ok);
   if (!ok) { report_error("bilateral_filter_sigma_inv_depth", bilateral_filter_sigma_inv_depth_edit->text()); return false; }
-
+  
+  
+  // Structure settings
+#ifdef HAVE_STRUCTURE
+  config->structure_depth_range = structure_depth_range_values[structure_depth_range_combo->currentIndex()];
+  
+  config->structure_depth_only = structure_depth_only_checkbox->isChecked();
+  
+  config->structure_depth_resolution = structure_depth_resolution_combo->currentText().toStdString();
+  
+  config->structure_expensive_correction = structure_expensive_correction_checkbox->isChecked();
+  
+  config->structure_one_shot_dynamic_calibration = structure_one_shot_dynamic_calibration_checkbox->isChecked();
+  
+  config->structure_depth_diff_threshold = structure_depth_diff_threshold_edit->text().toDouble(&ok);
+  if (!ok) { report_error("structure_depth_diff_threshold", structure_depth_diff_threshold_edit->text()); return false; }
+  
+  config->structure_infrared_auto_exposure = structure_infrared_auto_exposure_checkbox->isChecked();
+  
+  config->structure_visible_exposure_time = structure_visible_exposure_time_edit->text().toDouble(&ok);
+  if (!ok) { report_error("structure_visible_exposure_time", structure_visible_exposure_time_edit->text()); return false; }
+#endif
+  
+  
   // k4a settings
   // TODO Silvano error check
 #ifdef HAVE_K4A

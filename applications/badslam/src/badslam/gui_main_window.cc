@@ -28,6 +28,7 @@
 
 // Must be included before Qt includes to avoid "foreach" conflict
 #include "badslam/input_realsense.h"
+#include "badslam/input_structure.h"
 #include "badslam/input_azurekinect.h"
 
 #include "badslam/gui_main_window.h"
@@ -378,6 +379,7 @@ MainWindow::MainWindow(
   horizontal_layout->addWidget(render_window_gl_->window());
   
   connect(&render_window_->signal_helper(), &BadSlamRenderWindowSignalHelper::ClickedKeyframe, this, &MainWindow::ClickedKeyframe);
+  connect(&render_window_->signal_helper(), &BadSlamRenderWindowSignalHelper::FollowCameraEnabled, follow_camera_act, &QAction::setChecked);
   
   QWidget* main_widget = new QWidget();
   main_widget->setLayout(horizontal_layout);
@@ -452,7 +454,11 @@ MainWindow::~MainWindow() {
   // Wait for the thread to exit
   unique_lock<mutex> quit_lock(run_mutex_);
   while (!quit_done_) {
-    quit_condition_.wait(quit_lock);
+    // Since the thread might still emit queued events, we need to process them
+    // to avoid possible deadlocks.
+    quit_lock.unlock();
+    qApp->processEvents();
+    quit_lock.lock();
   }
   quit_lock.unlock();
   
@@ -675,8 +681,6 @@ void MainWindow::ShowCurrentFrameImages() {
   current_frame_depth_display->FitContent();
   current_frame_depth_display->SetBlackWhiteValues(0, config_.max_depth / config_.raw_to_float_depth);
   
-  UpdateCurrentFrameImages(std::max(0, static_cast<int>(frame_index_) - 1), false);
-  
   // Tab widget with the images
   QTabWidget* tab_widget = new QTabWidget(current_frame_images_dialog);
   tab_widget->setElideMode(Qt::TextElideMode::ElideRight);
@@ -689,15 +693,17 @@ void MainWindow::ShowCurrentFrameImages() {
   layout->addWidget(tab_widget);
   current_frame_images_dialog->setLayout(layout);
   
-  current_frame_images_dialog->show();
-  show_current_frame_images_act->setChecked(true);
-  
   connect(current_frame_images_dialog, &QDialog::rejected, [&](){
     current_frame_images_dialog = nullptr;
     show_current_frame_images_act->setChecked(false);
     disconnect(this, &MainWindow::UpdateCurrentFrameImagesSignal, this, &MainWindow::UpdateCurrentFrameImages);
   });
   connect(this, &MainWindow::UpdateCurrentFrameImagesSignal, this, &MainWindow::UpdateCurrentFrameImages, Qt::BlockingQueuedConnection);
+  
+  show_current_frame_images_act->setChecked(true);
+  
+  // This will show the dialog once images are available
+  UpdateCurrentFrameImages(std::max(0, static_cast<int>(frame_index_) - 1), false);
 }
 
 void MainWindow::ShowIntrinsicsAndDepthDeformation() {
@@ -774,6 +780,7 @@ void MainWindow::ShowIntrinsicsAndDepthDeformation() {
   layout->addWidget(depth_deformation_display);
   
   intrinsics_dialog->setLayout(layout);
+  intrinsics_dialog->resize(2 * intrinsics_dialog->sizeHint());
   intrinsics_dialog->show();
   show_intrinsics_act->setChecked(true);
   
@@ -1546,12 +1553,16 @@ void MainWindow::WorkerThreadMain() {
   // TODO: This duplicates a lot of code from main.cc, de-duplicate this!
   
   RealSenseInputThread rs_input;
+  StructureInputThread structure_input;
   K4AInputThread k4a_input;
-  int live_input = 0; // 1 realsense, 2 k4a
+  int live_input = 0; // 1 realsense, 2 k4a, 3 structure
   
   if (dataset_folder_path_ == string("live://realsense")) {
     rs_input.Start(&rgbd_video_, &depth_scaling_);
     live_input = 1;
+  } else if (dataset_folder_path_ == string("live://structure")) {
+    structure_input.Start(&rgbd_video_, &depth_scaling_, config_);
+    live_input = 3;
   } else if (dataset_folder_path_ == "live://k4a") {
     k4a_input.Start(
         &rgbd_video_, 
@@ -1785,6 +1796,8 @@ void MainWindow::WorkerThreadMain() {
       rs_input.GetNextFrame();
     } else if (live_input == 2) {
       k4a_input.GetNextFrame();
+    } else if (live_input == 3) {
+      structure_input.GetNextFrame();
     }
     
     // Get the current RGB-D frame's RGB and depth images. This may wait for I/O
@@ -2048,6 +2061,10 @@ void MainWindow::UpdateCurrentFrameImages(int frame_index, bool images_in_use_el
     rgbd_video_.depth_frame_mutable(frame_index)->ClearImageAndDerivedData();
     
     rgbd_video_mutex_.unlock();
+  }
+  
+  if (!current_frame_images_dialog->isVisible()) {
+    current_frame_images_dialog->show();
   }
 }
 

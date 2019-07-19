@@ -61,8 +61,10 @@ class BadSlamRenderWindowSignalHelper : public QObject {
  Q_OBJECT
  signals:
   void ClickedKeyframe(int clicked_kf_index);
+  void FollowCameraEnabled(bool enabled);
  public:
   inline void EmitClickedKeyframe(int clicked_kf_index) { emit ClickedKeyframe(clicked_kf_index); }
+  inline void EmitFollowCameraEnabled(bool enabled) { emit FollowCameraEnabled(enabled); }
 };
 
 // Renders the 3D visualization for BAD SLAM.
@@ -183,6 +185,9 @@ class BadSlamRenderWindow : public RenderWindowCallbacks {
   // trajectory with a delay. This also activates regular rendering updates
   // of the visualization, such that this camera movement can be shown.
   void UseFollowCamera(bool enable);
+  
+  // Returns whether follow-camera mode is used.
+  inline bool follow_camera_used() const { return use_follow_camera_; }
   
   // Change the size that the surfel splats are rendered with.
   void ChangeSplatSize(int num_steps);

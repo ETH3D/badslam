@@ -288,9 +288,10 @@ class Camera {
     kInvalid = 0,  // must be the lowest number
     kPinholeCamera4f = 1,
     kRadtanCamera8d = 2,
+    kRadtanCamera9d = 5,
     kThinPrismFisheyeCamera12d = 3,
     kNonParametricBicubicProjectionCamerad = 4,
-    kNumTypes = 5  // must be the highest number, does not need to stay constant
+    kNumTypes = 6  // must be the highest number, does not need to stay constant
   };
   
   // Constructor, sets the type id and image dimensions.
@@ -546,10 +547,10 @@ class RadtanDistortion4 {
     const Scalar rho2_u = mx2_u + my2_u;
     const Scalar rad_dist_u = k1 * rho2_u + k2 * rho2_u * rho2_u;
 
-    (*jacobian)(0, 0) = 1 + rad_dist_u + k1 * static_cast<Scalar>(2) * mx2_u + k2 * rho2_u * 4 * mx2_u + static_cast<Scalar>(2) * r1 * undistorted_point.coeff(1) + 6 * r2 * undistorted_point.coeff(0);
-    (*jacobian)(1, 0) = k1 * static_cast<Scalar>(2) * undistorted_point.coeff(0) * undistorted_point.coeff(1) + k2 * 4 * rho2_u * undistorted_point.coeff(0) * undistorted_point.coeff(1) + r1 * static_cast<Scalar>(2) * undistorted_point.coeff(0) + static_cast<Scalar>(2) * r2 * undistorted_point.coeff(1);
+    (*jacobian)(0, 0) = 1 + rad_dist_u + k1 * static_cast<Scalar>(2) * mx2_u + k2 * rho2_u * static_cast<Scalar>(4) * mx2_u + static_cast<Scalar>(2) * r1 * undistorted_point.coeff(1) + static_cast<Scalar>(6) * r2 * undistorted_point.coeff(0);
+    (*jacobian)(1, 0) = k1 * static_cast<Scalar>(2) * mxy_u + k2 * static_cast<Scalar>(4) * rho2_u * mxy_u + r1 * static_cast<Scalar>(2) * undistorted_point.coeff(0) + static_cast<Scalar>(2) * r2 * undistorted_point.coeff(1);
     (*jacobian)(0, 1) = (*jacobian)(1, 0);
-    (*jacobian)(1, 1) = 1 + rad_dist_u + k1 * static_cast<Scalar>(2) * my2_u + k2 * rho2_u * 4 * my2_u + 6 * r1 * undistorted_point.coeff(1) + static_cast<Scalar>(2) * r2 * undistorted_point.coeff(0);
+    (*jacobian)(1, 1) = 1 + rad_dist_u + k1 * static_cast<Scalar>(2) * my2_u + k2 * rho2_u * static_cast<Scalar>(4) * my2_u + static_cast<Scalar>(6) * r1 * undistorted_point.coeff(1) + static_cast<Scalar>(2) * r2 * undistorted_point.coeff(0);
     
     return OutputType(undistorted_point.coeff(0) + undistorted_point.coeff(0) * rad_dist_u + static_cast<Scalar>(2) * r1 * mxy_u + r2 * (rho2_u + static_cast<Scalar>(2) * mx2_u),
                       undistorted_point.coeff(1) + undistorted_point.coeff(1) * rad_dist_u + static_cast<Scalar>(2) * r2 * mxy_u + r1 * (rho2_u + static_cast<Scalar>(2) * my2_u));
@@ -581,8 +582,139 @@ class RadtanDistortion4 {
   
   inline void CropParameters(int /*left*/, int /*top*/, int /*right*/, int /*bottom*/, Scalar* /*parameters*/) const {}
   
-  static  inline int GetParameterCount(const Scalar* /*parameters*/) {
+  static inline int GetParameterCount(const Scalar* /*parameters*/) {
     return 4;
+  }
+  
+  inline void CacheDerivedParameters(u32 /*width*/, u32 /*height*/, const Scalar* /*parameters*/) {}
+};
+
+
+// Algorithm step which can be used in camera implementations:
+// Radial-tangential distortion with 5 parameters k1, k2, k3, r1, r2.
+template<typename Scalar>
+class RadtanDistortion5 {
+ public:
+  // Normalized image coordinates (before distortion).
+  typedef Matrix<Scalar, 2, 1> InputType;
+  // Normalized image coordinates (after distortion).
+  typedef Matrix<Scalar, 2, 1> OutputType;
+  
+  template<ImageCoordinateConvention convention, typename DerivedA, typename DerivedB>
+  inline bool ProjectIfVisible(const MatrixBase<DerivedA>& camera_point,
+                               float /*pixel_border*/,
+                               u32 /*width*/,
+                               u32 /*height*/,
+                               const Scalar* parameters,
+                               MatrixBase<DerivedB>* normalized_image_coordinates) const {
+    *normalized_image_coordinates = Project<convention>(camera_point, parameters);
+    return true;
+  }
+  
+  template<ImageCoordinateConvention convention, typename Derived>
+  inline OutputType Project(const MatrixBase<Derived>& undistorted_point,
+                            const Scalar* parameters) const {
+    const Scalar& k1 = parameters[0];
+    const Scalar& k2 = parameters[1];
+    const Scalar& k3 = parameters[2];
+    const Scalar& r1 = parameters[3];
+    const Scalar& r2 = parameters[4];
+    
+    const Scalar mx2_u = undistorted_point.coeff(0) * undistorted_point.coeff(0);
+    const Scalar my2_u = undistorted_point.coeff(1) * undistorted_point.coeff(1);
+    const Scalar mxy_u = undistorted_point.coeff(0) * undistorted_point.coeff(1);
+    const Scalar rho2_u = mx2_u + my2_u;
+    const Scalar rad_dist_u = k1 * rho2_u + k2 * rho2_u * rho2_u + k3 * rho2_u * rho2_u * rho2_u;
+    return OutputType(
+        undistorted_point.coeff(0) + undistorted_point.coeff(0) * rad_dist_u + static_cast<Scalar>(2) * r1 * mxy_u + r2 * (rho2_u + static_cast<Scalar>(2) * mx2_u),
+        undistorted_point.coeff(1) + undistorted_point.coeff(1) * rad_dist_u + static_cast<Scalar>(2) * r2 * mxy_u + r1 * (rho2_u + static_cast<Scalar>(2) * my2_u));
+  }
+  
+  template<ImageCoordinateConvention convention, typename Derived>
+  inline OutputType ProjectWithJacobian(const MatrixBase<Derived>& undistorted_point,
+                                        const Scalar* parameters,
+                                        Matrix<Scalar, 2, 2>* jacobian) const {
+    const Scalar& k1 = parameters[0];
+    const Scalar& k2 = parameters[1];
+    const Scalar& k3 = parameters[2];
+    const Scalar& r1 = parameters[3];
+    const Scalar& r2 = parameters[4];
+    
+    const Scalar mx2_u = undistorted_point.coeff(0) * undistorted_point.coeff(0);
+    const Scalar my2_u = undistorted_point.coeff(1) * undistorted_point.coeff(1);
+    const Scalar mxy_u = undistorted_point.coeff(0) * undistorted_point.coeff(1);
+    const Scalar rho2_u = mx2_u + my2_u;
+    const Scalar rad_dist_u = k1 * rho2_u + k2 * rho2_u * rho2_u + k3 * rho2_u * rho2_u * rho2_u;
+    
+    (*jacobian)(0, 0) = 1 + rad_dist_u +
+                        k1 * static_cast<Scalar>(2) * mx2_u +
+                        k2 * static_cast<Scalar>(4) * rho2_u * mx2_u +
+                        k3 * static_cast<Scalar>(6) * rho2_u * rho2_u * mx2_u +
+                        r1 * static_cast<Scalar>(2) * undistorted_point.coeff(1) +
+                        r2 * static_cast<Scalar>(6) * undistorted_point.coeff(0);
+    (*jacobian)(1, 0) = k1 * static_cast<Scalar>(2) * mxy_u +
+                        k2 * static_cast<Scalar>(4) * rho2_u * mxy_u +
+                        k3 * static_cast<Scalar>(6) * rho2_u * rho2_u * mxy_u +
+                        r1 * static_cast<Scalar>(2) * undistorted_point.coeff(0) +
+                        r2 * static_cast<Scalar>(2) * undistorted_point.coeff(1);
+    (*jacobian)(0, 1) = (*jacobian)(1, 0);
+    (*jacobian)(1, 1) = 1 + rad_dist_u +
+                        k1 * static_cast<Scalar>(2) * my2_u +
+                        k2 * static_cast<Scalar>(4) * rho2_u * my2_u +
+                        k3 * static_cast<Scalar>(6) * rho2_u * rho2_u * my2_u +
+                        r1 * static_cast<Scalar>(6) * undistorted_point.coeff(1) +
+                        r2 * static_cast<Scalar>(2) * undistorted_point.coeff(0);
+    
+    return OutputType(undistorted_point.coeff(0) + undistorted_point.coeff(0) * rad_dist_u + static_cast<Scalar>(2) * r1 * mxy_u + r2 * (rho2_u + static_cast<Scalar>(2) * mx2_u),
+                      undistorted_point.coeff(1) + undistorted_point.coeff(1) * rad_dist_u + static_cast<Scalar>(2) * r2 * mxy_u + r1 * (rho2_u + static_cast<Scalar>(2) * my2_u));
+  }
+  
+  template<ImageCoordinateConvention convention, typename Derived>
+  inline InputType Unproject(const MatrixBase<Derived>& distorted_point,
+                             const Scalar* parameters) const {
+    Scalar cur_x = distorted_point.coeff(0);
+    Scalar cur_y = distorted_point.coeff(1);
+    
+    // Gauss-Newton optimization algorithm.
+    const float kUndistortionEpsilon = 1e-10f;
+    const usize kMaxIterations = 100;
+    
+    for (usize i = 0; i < kMaxIterations; ++i) {
+      Matrix<Scalar, 2, 2> ddxy_dxy;
+      Matrix<Scalar, 2, 1> distorted = ProjectWithJacobian<convention>(Matrix<Scalar, 2, 1>(cur_x, cur_y), parameters, &ddxy_dxy);
+      
+      // (Non-squared) residuals.
+      float dx = distorted.x() - distorted_point.x();
+      float dy = distorted.y() - distorted_point.y();
+      
+      // Accumulate H and b.
+      float H_0_0 = ddxy_dxy(0, 0) * ddxy_dxy(0, 0) + ddxy_dxy(1, 0) * ddxy_dxy(1, 0);
+      float H_1_0_and_0_1 = ddxy_dxy(0, 0) * ddxy_dxy(0, 1) + ddxy_dxy(1, 0) * ddxy_dxy(1, 1);
+      float H_1_1 = ddxy_dxy(0, 1) * ddxy_dxy(0, 1) + ddxy_dxy(1, 1) * ddxy_dxy(1, 1);
+      float b_0 = dx * ddxy_dxy(0, 0) + dy * ddxy_dxy(1, 0);
+      float b_1 = dx * ddxy_dxy(0, 1) + dy * ddxy_dxy(1, 1);
+      
+      // Solve the system and update the parameters.
+      float x_1 = (b_1 - H_1_0_and_0_1 / H_0_0 * b_0) /
+                  (H_1_1 - H_1_0_and_0_1 * H_1_0_and_0_1 / H_0_0);
+      float x_0 = (b_0 - H_1_0_and_0_1 * x_1) / H_0_0;
+      cur_x -= x_0;
+      cur_y -= x_1;
+      
+      if (dx * dx + dy * dy < kUndistortionEpsilon) {
+        break;
+      }
+    }
+    
+    return InputType(cur_x, cur_y);
+  }
+  
+  inline void ScaleParameters(Scalar /*factor*/, Scalar* /*parameters*/) const {}
+  
+  inline void CropParameters(int /*left*/, int /*top*/, int /*right*/, int /*bottom*/, Scalar* /*parameters*/) const {}
+  
+  static inline int GetParameterCount(const Scalar* /*parameters*/) {
+    return 5;
   }
   
   inline void CacheDerivedParameters(u32 /*width*/, u32 /*height*/, const Scalar* /*parameters*/) {}
@@ -1618,6 +1750,14 @@ typedef CameraImpl<static_cast<int>(Camera::Type::kRadtanCamera8d),
                    RadtanDistortion4<double>,
                    PixelMapping4<double>> RadtanCamera8d;
 
+// Double pinhole-radtan camera class with 9 parameters:
+// k1, k2, k3, r1, r2, fx, fy, cx, cy.
+typedef CameraImpl<static_cast<int>(Camera::Type::kRadtanCamera9d),
+                   double,
+                   PinholeProjection<double>,
+                   RadtanDistortion5<double>,
+                   PixelMapping4<double>> RadtanCamera9d;
+
 // Double thin prism fisheye camera class with 12 parameters:
 // k1, k2, k3, k4, p1, p2, sx1, sy1, fx, fy, cx, cy.
 typedef CameraImpl<static_cast<int>(Camera::Type::kThinPrismFisheyeCamera12d),
@@ -1684,6 +1824,12 @@ void IdentifyCamera(Camera* camera, Args... args) {
           static_cast<const _##object##_type&>(object);                      \
       (void)_##object;                                                       \
       __VA_ARGS__;                                                           \
+    } else if ((object).type() == Camera::Type::kRadtanCamera9d) {           \
+      typedef RadtanCamera9d _##object##_type;                               \
+      const _##object##_type& _##object =                                    \
+          static_cast<const _##object##_type&>(object);                      \
+      (void)_##object;                                                       \
+      __VA_ARGS__;                                                           \
     } else if ((object).type() == Camera::Type::kThinPrismFisheyeCamera12d) { \
       typedef ThinPrismFisheyeCamera12d _##object##_type;                    \
       const _##object##_type& _##object =                                    \
@@ -1713,6 +1859,9 @@ void IdentifyCamera(Camera* camera, Args... args) {
       __VA_ARGS__;                                                           \
     } else if ((type) == Camera::Type::kRadtanCamera8d) {                    \
       typedef RadtanCamera8d _type;                                          \
+      __VA_ARGS__;                                                           \
+    } else if ((type) == Camera::Type::kRadtanCamera9d) {                    \
+      typedef RadtanCamera9d _type;                                          \
       __VA_ARGS__;                                                           \
     } else if ((type) == Camera::Type::kThinPrismFisheyeCamera12d) {         \
       typedef ThinPrismFisheyeCamera12d _type;                               \
