@@ -70,6 +70,9 @@ find_package(OpenGL REQUIRED)
 find_package(Eigen3 REQUIRED)
 
 # Boost (external)
+if (POLICY CMP0074) # get rid of annoying warning
+  cmake_policy(SET CMP0074 NEW)
+endif()
 find_package(Boost COMPONENTS serialization filesystem system REQUIRED)
 
 # Loguru (packaged)
