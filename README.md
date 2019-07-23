@@ -98,9 +98,9 @@ The following external dependencies are optional.
 #### Build instructions for Linux ####
 
 Since OpenGV (at the time of writing) always uses the `-march=native` flag,
-both BAD SLAM and g2o must use this as well. (For g2o, check for the
-`BUILD_WITH_MARCH_NATIVE` CMake option.) If there are inconsistencies, the program
-may crash when OpenGV or g2o functionality is used (i.e., at loop closures).
+both BAD SLAM and g2o must use this as well. (For g2o, check that the
+`BUILD_WITH_MARCH_NATIVE` CMake option is set to ON.) If there are inconsistencies, the program
+will likely crash when OpenGV or g2o functionality is used (i.e., at loop closures).
 
 After obtaining all dependencies, the application can be built with CMake, for example as follows:
 
@@ -125,9 +125,16 @@ make -j badslam_test
 ./build_RelWithDebInfo/applications/badslam/badslam_test
 ```
 
-All tests should pass, unless a default CUDA kernel block size does not work for
-your GPU. See below for block-size tuning, which however is not picked up by the unit tests at the moment.
-The application has been tested on GTX 1080 and GTX 1070 GPUs.
+All tests should pass. Troubleshooting:
+
+* If you get a CUDA error like "too many resources requested for launch", probably
+  a default CUDA kernel block size does not work for your GPU. See below for
+  block-size tuning, which however is not picked up by the unit tests at the moment.
+  The application has been tested on GTX 1080 and GTX 1070 GPUs.
+* If the `Optimization.PoseGraphOptimizer` test crashes, for example with an error
+  message like "Cholesky failure", then please verify that your build of g2o has
+  the `BUILD_WITH_MARCH_NATIVE` CMake option set to ON, and that BAD SLAM actually
+  uses this install of g2o.
 
 
 #### Build instructions for Windows ####
