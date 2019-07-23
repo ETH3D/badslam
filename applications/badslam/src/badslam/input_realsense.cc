@@ -118,18 +118,18 @@ void RealSenseInputThread::Start(RGBDVideo<Vec3u8, u16>* rgbd_video, float* dept
   color_parameters[1] = color_intrinsics.fy;
   color_parameters[2] = color_intrinsics.ppx + 0.5f;
   color_parameters[3] = color_intrinsics.ppy + 0.5f;
-  LOG(WARNING) << "Ignoring the color stream's distortion: " << color_intrinsics.model << " (coefficients: "
-                << color_intrinsics.coeffs[0] << ", "
-                << color_intrinsics.coeffs[1] << ", "
-                << color_intrinsics.coeffs[2] << ", "
-                << color_intrinsics.coeffs[3] << ", "
-                << color_intrinsics.coeffs[4] << ")";
   if (color_intrinsics.coeffs[0] != 0 ||
       color_intrinsics.coeffs[1] != 0 ||
       color_intrinsics.coeffs[2] != 0 ||
       color_intrinsics.coeffs[3] != 0 ||
       color_intrinsics.coeffs[4] != 0) {
-    LOG(ERROR) << "WARNING: At least one of the distortion coefficients is non-zero!";
+    LOG(ERROR) << "Ignoring the color stream's distortion, but at least one of the distortion coefficients is non-zero!";
+    LOG(ERROR) << "Model: " << color_intrinsics.model << ". Coefficients: "
+               << color_intrinsics.coeffs[0] << ", "
+               << color_intrinsics.coeffs[1] << ", "
+               << color_intrinsics.coeffs[2] << ", "
+               << color_intrinsics.coeffs[3] << ", "
+               << color_intrinsics.coeffs[4] << "";
   }
   rgbd_video->color_camera_mutable()->reset(new PinholeCamera4f(
       color_intrinsics.width, color_intrinsics.height, color_parameters));
