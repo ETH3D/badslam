@@ -53,7 +53,10 @@ if __name__ == '__main__':
             print('Program call failed (return code: ' + str(return_code) + ')')
             sys.exit(1)
         
-        with open('auto_tuning_iteration_' + str(tuning_iteration) + '.txt', 'rb') as tuning_file:
+        mode = 'r'
+        if sys.version_info[0] < 3:
+           mode  = 'wb'
+        with open('auto_tuning_iteration_' + str(tuning_iteration) + '.txt', mode) as tuning_file:
             for line in tuning_file.readlines():
                 if len(line) == 0:
                     continue
@@ -74,6 +77,9 @@ if __name__ == '__main__':
                     if runtime < prev_result[2]:
                         best_results[kernel_name] = (width, height, runtime)
     
-    with open('auto_tuning_result.txt', 'wb') as out_file:
-        for kernel_name, kernel_info in best_results.iteritems():
+    mode = 'w'
+    if sys.version_info[0] < 3:
+       mode  = 'wb'
+    with open('auto_tuning_result.txt', mode) as out_file:
+        for kernel_name, kernel_info in best_results.items():
             out_file.write(kernel_name + ' ' + kernel_info[0] + ' ' + kernel_info[1] + ' ' + str(kernel_info[2]) + '\n')
