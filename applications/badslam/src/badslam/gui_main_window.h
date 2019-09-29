@@ -141,6 +141,7 @@ class MainWindow : public QMainWindow {
   void Screenshot();
   void SelectKeyframeTool();
   void DeleteKeyframeTool();
+  void Reset();
   
   // 3D view actions
   void ClickedKeyframe(int index);
@@ -161,6 +162,8 @@ class MainWindow : public QMainWindow {
   bool UsingLiveInput();
   
   void WorkerThreadMain();
+  
+  void Deinitialize();
   
   
   // SLAM
@@ -248,6 +251,7 @@ class MainWindow : public QMainWindow {
   QAction* densify_act;
   QAction* select_keyframe_act;
   QAction* delete_keyframe_act;
+  QAction* reset_act;
   atomic<bool> show_current_frame_;
   
   

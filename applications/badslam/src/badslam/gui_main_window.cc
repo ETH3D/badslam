@@ -362,6 +362,11 @@ MainWindow::MainWindow(
   delete_keyframe_act->setCheckable(true);
   delete_keyframe_act->setStatusTip(tr("Delete keyframes"));
   
+  toolbar->addSeparator();
+  
+  reset_act = toolbar->addAction(QIcon(":/badslam/reset.png"), tr("Reset reconstruction"), this, SLOT(Reset()));
+  reset_act->setStatusTip(tr("Reset the reconstruction"));
+  
   addToolBar(Qt::TopToolBarArea, toolbar);
   
   // Window layout
@@ -450,34 +455,7 @@ MainWindow::~MainWindow() {
   QSettings settings;
   settings.setValue("last_save_dir", last_save_dir_);
   
-  // Signal to the worker thread that it should exit
-  unique_lock<mutex> lock(run_mutex_);
-  run_ = false;
-  quit_requested_ = true;
-  lock.unlock();
-  run_condition_.notify_all();
-  
-  // Wait for the thread to exit
-  unique_lock<mutex> quit_lock(run_mutex_);
-  while (!quit_done_) {
-    // Since the thread might still emit queued events, we need to process them
-    // to avoid possible deadlocks.
-    quit_lock.unlock();
-    qApp->processEvents();
-    quit_lock.lock();
-  }
-  quit_lock.unlock();
-  
-  worker_thread_->join();
-  worker_thread_.reset();
-  
-  // Deinitialize BAD SLAM before discarding the OpenGL context that it may still use
-  if (bad_slam_set_) {
-    bad_slam_.reset();
-    
-    opengl_context.Deinitialize();
-    opengl_context_2.Deinitialize();
-  }
+  Deinitialize();
 }
 
 void MainWindow::SaveState() {
@@ -1527,6 +1505,26 @@ void MainWindow::DeleteKeyframeTool() {
   }
 }
 
+void MainWindow::Reset() {
+  // Exit the worker thread
+  Deinitialize();
+  
+  // Clean up
+  rgbd_video_.color_frames_mutable()->clear();
+  rgbd_video_.depth_frames_mutable()->clear();
+  
+  // Start the worker thread again
+  quit_requested_ = false;
+  quit_done_ = false;
+  worker_thread_.reset(new std::thread(std::bind(&MainWindow::WorkerThreadMain, this)));
+  
+  // Start running`
+  backwards_ = false;
+  single_step_ = false;
+  run_ = true;
+  run_condition_.notify_all();
+}
+
 void MainWindow::ClickedKeyframe(int index) {
   // Do not risk race conditions, so only allow keyframe selection if the
   // reconstruction is not running.
@@ -1876,6 +1874,38 @@ void MainWindow::WorkerThreadMain() {
   quit_done_ = true;
   lock.unlock();
   quit_condition_.notify_all();
+}
+
+void MainWindow::Deinitialize() {
+  // Signal to the worker thread that it should exit
+  unique_lock<mutex> lock(run_mutex_);
+  run_ = false;
+  quit_requested_ = true;
+  lock.unlock();
+  run_condition_.notify_all();
+  
+  // Wait for the thread to exit
+  unique_lock<mutex> quit_lock(run_mutex_);
+  while (!quit_done_) {
+    // Since the thread might still emit queued events, we need to process them
+    // to avoid possible deadlocks.
+    quit_lock.unlock();
+    qApp->processEvents();
+    quit_lock.lock();
+  }
+  quit_lock.unlock();
+  
+  worker_thread_->join();
+  worker_thread_.reset();
+  
+  // Deinitialize BAD SLAM before discarding the OpenGL context that it may still use
+  if (bad_slam_set_) {
+    bad_slam_.reset();
+    bad_slam_set_ = false;
+    
+    opengl_context.Deinitialize();
+    opengl_context_2.Deinitialize();
+  }
 }
 
 void MainWindow::RunStateChanged(bool running) {

@@ -78,7 +78,7 @@ Keyframe::Keyframe(
   set_frame_T_global(frame_T_global());
 }
 
-Keyframe:: Keyframe(
+Keyframe::Keyframe(
     cudaStream_t stream,
     u32 frame_index,
     const DepthParameters& depth_params,
