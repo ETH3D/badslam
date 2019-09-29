@@ -36,9 +36,9 @@ namespace vis {
 K4AInputThread::~K4AInputThread() {
   exit_ = true;
   if (thread_) {
+    LOG(INFO) << "Closing K4A input thread";
     thread_->join();
   }
-  LOG(INFO) << "Closing K4A input thread";
 }
 
 uint32_t K4AInputThread::k4a_convert_fps_to_uint(k4a_fps_t fps) {

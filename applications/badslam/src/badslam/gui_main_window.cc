@@ -1510,6 +1510,7 @@ void MainWindow::Reset() {
   Deinitialize();
   
   // Clean up
+  render_window_->Deinitialize();
   rgbd_video_.color_frames_mutable()->clear();
   rgbd_video_.depth_frames_mutable()->clear();
   

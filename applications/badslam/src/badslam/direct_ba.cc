@@ -185,6 +185,10 @@ DirectBA::~DirectBA() {
   cudaEventDestroy(ba_pcg_pre_event_);
   cudaEventDestroy(ba_pcg_post_event_);
   
+  if (new_surfels_temp_storage_bytes_ > 0) {
+    cudaFree(new_surfels_temp_storage_);
+  }
+  
   if (gather_convergence_samples_) {
     convergence_samples_file_.close();
   }
