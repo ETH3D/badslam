@@ -522,7 +522,7 @@ void SettingsDialog::RealSenseLiveInputClicked() {
       this,
       tr("RealSense live input"),
       tr("Set recommended default settings for Intel D435 live input?"
-         " This will disable photometric residuals, set --bilateral_filter_sigma_inv_depth to 0.01, set --max_depth to 4, and set --fps_restriction to 0."),
+         " This will disable photometric residuals, set --bilateral_filter_sigma_inv_depth to 0.01, set --max_depth to 4, and set --restrict_fps_to 0."),
       QMessageBox::StandardButton::Yes | QMessageBox::StandardButton::No) == QMessageBox::StandardButton::Yes) {
     use_photometric_residuals_checkbox->setChecked(false);
     bilateral_filter_sigma_inv_depth_edit->setText("0.01");
@@ -538,7 +538,7 @@ void SettingsDialog::StructureLiveInputClicked() {
       this,
       tr("Structure live input"),
       tr("Set recommended default settings for Structure Core live input?"
-         " This will set --bilateral_filter_sigma_inv_depth to 0.0075, --max_depth to 10, and --fps_restriction to 0."),
+         " This will set --bilateral_filter_sigma_inv_depth to 0.0075, --max_depth to 10, and --restrict_fps_to 0."),
       QMessageBox::StandardButton::Yes | QMessageBox::StandardButton::No) == QMessageBox::StandardButton::Yes) {
     bilateral_filter_sigma_inv_depth_edit->setText("0.0075");
     max_depth_edit->setText("10");
@@ -553,7 +553,7 @@ void SettingsDialog::K4ALiveInputClicked() {
       this,
       tr("K4A live input"),
       tr("Set recommended default settings for Azure Kinect live input?"
-         " This will disable photometric residuals, set --max_depth to 10, and set --fps_restriction to 0."),
+         " This will disable photometric residuals, set --max_depth to 10, and set --restrict_fps_to 0."),
       QMessageBox::StandardButton::Yes | QMessageBox::StandardButton::No) == QMessageBox::StandardButton::Yes) {
     use_photometric_residuals_checkbox->setChecked(false);
     max_depth_edit->setText("10");

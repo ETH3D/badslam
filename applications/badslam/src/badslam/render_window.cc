@@ -116,6 +116,7 @@ BadSlamRenderWindow::BadSlamRenderWindow(
   
   init_max_point_count_ = 0;
   
+  global_T_current_frame_ = Mat4f::Identity();
   current_frame_pose_set_ = false;
   current_frame_cloud_set_ = false;
   

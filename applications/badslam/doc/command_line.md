@@ -94,6 +94,7 @@ A complete list of optional program arguments follows, grouped by category:
 * `--window_default_width`: Default width of the 3D visualization window.
 * `--window_default_height`: Default height of the 3D visualization window.
 * `--show_current_frame_cloud`: Visualize the point cloud of the current frame.
+* `--follow_camera`: Make the visualization camera follow the estimated camera pose.
 
 #### Auto-tuning ####
 

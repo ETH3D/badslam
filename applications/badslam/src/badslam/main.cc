@@ -302,6 +302,10 @@ int LIBVIS_QT_MAIN(int argc, char** argv) {
       cmd_parser.Flag("--show_current_frame_cloud",
                       "Visualize the point cloud of the current frame.");
   
+  bool follow_camera =
+      cmd_parser.Flag("--follow_camera",
+                      "Make the visualization camera follow the estimated camera pose.");
+  
   
   // Auto-tuning.
   int auto_tuning_iteration = -1;
@@ -481,6 +485,7 @@ int LIBVIS_QT_MAIN(int argc, char** argv) {
         depth_scaling,
         splat_half_extent_in_pixels,
         show_current_frame_cloud,
+        follow_camera,
         show_input_images,
         window_default_width,
         window_default_height);

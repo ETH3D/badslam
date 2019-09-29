@@ -58,6 +58,7 @@ void ShowMainWindow(
     float depth_scaling,
     float splat_half_extent_in_pixels,
     bool show_current_frame_cloud,
+    bool follow_camera,
     bool show_input_images,
     int window_width,
     int window_height);
@@ -80,6 +81,7 @@ class MainWindow : public QMainWindow {
       float depth_scaling,
       float splat_half_extent_in_pixels,
       bool show_current_frame_cloud,
+      bool follow_camera,
       bool show_input_images,
       QWidget* parent = nullptr,
       Qt::WindowFlags flags = Qt::WindowFlags());

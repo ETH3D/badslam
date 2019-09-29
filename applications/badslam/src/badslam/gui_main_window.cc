@@ -91,6 +91,7 @@ void ShowMainWindow(
     float depth_scaling,
     float splat_half_extent_in_pixels,
     bool show_current_frame_cloud,
+    bool follow_camera,
     bool show_input_images,
     int window_width,
     int window_height) {
@@ -105,6 +106,7 @@ void ShowMainWindow(
       depth_scaling,
       splat_half_extent_in_pixels,
       show_current_frame_cloud,
+      follow_camera,
       show_input_images,
       nullptr,
       Qt::WindowFlags());
@@ -124,6 +126,7 @@ MainWindow::MainWindow(
     float depth_scaling,
     float splat_half_extent_in_pixels,
     bool show_current_frame_cloud,
+    bool follow_camera,
     bool show_input_images,
     QWidget* parent,
     Qt::WindowFlags flags)
@@ -185,6 +188,7 @@ MainWindow::MainWindow(
   follow_camera_act = new QAction(tr("Follow camera"), this);
   follow_camera_act->setStatusTip(tr("Make the 3D view follow the current estimate of the camera position"));
   follow_camera_act->setCheckable(true);
+  follow_camera_act->setChecked(follow_camera);
   connect(follow_camera_act, &QAction::triggered, this, &MainWindow::FollowCameraChanged);
   
   show_current_frame_act = new QAction(tr("Render current frame"), this);
@@ -438,6 +442,8 @@ MainWindow::MainWindow(
     connect(slam_init_timer_, SIGNAL(timeout()), this, SLOT(ShowCurrentFrameImagesOnceSLAMInitialized()));
     slam_init_timer_->start(10);
   }
+  
+  FollowCameraChanged();
 }
 
 MainWindow::~MainWindow() {
