@@ -58,6 +58,8 @@ if (CMAKE_CUDA_COMPILER)
   else()
     set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS}")
   endif()
+else()
+  message(FATAL_ERROR "CMake did not find CUDA, which is required to build this program.")
 endif()
 
 # Cross-platform threading. See:
@@ -344,16 +346,9 @@ add_library(libvis SHARED
 )
 set_property(TARGET libvis PROPERTY FOLDER "libvis")
 
-#target_compile_definitions(libvis PUBLIC _USE_MATH_DEFINES)
-#target_compile_options(libvis PUBLIC "/WX /O2 /wd4068 /MP")
-#target_compile_options(libvis PUBLIC "/bigobj")
-
 target_compile_options(libvis PRIVATE
   "${LIBVIS_WARNING_OPTIONS}"
 )
-#if(MSVC)
-#  target_compile_definitions(libvis PRIVATE LOGURU_EXPORT=${LOGURU_DLL_IMPORT})
-#endif()
 if (VULKAN_FOUND)
   target_compile_options(libvis PUBLIC -DLIBVIS_HAVE_VULKAN)
   target_include_directories(libvis PRIVATE "${VULKAN_PATH}/include")
