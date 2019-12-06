@@ -35,6 +35,9 @@
 #include "badslam/input_structure.h"
 #include "badslam/input_azurekinect.h"
 
+#include <clocale>
+#include <signal.h>
+
 #include <boost/filesystem.hpp>
 #include <libvis/command_line_parser.h>
 #include <libvis/cuda/cuda_auto_tuner.h>
@@ -46,7 +49,6 @@
 #include <libvis/timing.h>
 #include <QApplication>
 #include <QSurfaceFormat>
-#include <signal.h>
 
 #include "badslam/bad_slam.h"
 #include "badslam/cuda_depth_processing.cuh"
@@ -456,6 +458,12 @@ int LIBVIS_QT_MAIN(int argc, char** argv) {
   QCoreApplication::setOrganizationName("ETH");
   QCoreApplication::setOrganizationDomain("eth3d.net");
   QCoreApplication::setApplicationName("BAD SLAM");
+  
+  // Reset the locale to C (after constructing a QApplication may change it).
+  // This avoids an issue with the K4A SDK, see BAD SLAM's GitHub issue #34:
+  // https://github.com/ETH3D/badslam/issues/34
+  QLocale::setDefault(QLocale::C);
+  setlocale(LC_ALL, "C");
   
   // Load the dataset, respectively start the live input or show the GUI.
   RealSenseInputThread rs_input;
