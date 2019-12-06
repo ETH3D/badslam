@@ -129,8 +129,7 @@ All tests should pass. Troubleshooting:
 
 * If you get a CUDA error like "too many resources requested for launch", probably
   a default CUDA kernel block size does not work for your GPU. See below for
-  block-size tuning, which however is not picked up by the unit tests at the moment.
-  The application has been tested on GTX 1080 and GTX 1070 GPUs.
+  block-size tuning. The application has been tested on GTX 1080 and GTX 1070 GPUs.
 * If the `Optimization.PoseGraphOptimizer` test crashes, for example with an error
   message like "Cholesky failure", then please verify that your build of g2o has
   the `BUILD_WITH_MARCH_NATIVE` CMake option set to ON, and that BAD SLAM actually

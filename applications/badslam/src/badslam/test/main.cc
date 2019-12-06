@@ -26,7 +26,9 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+#include <boost/filesystem.hpp>
 #include <gtest/gtest.h>
+#include <libvis/cuda/cuda_auto_tuner.h>
 #include <libvis/libvis.h>
 #include <libvis/qt_thread.h>
 
@@ -34,5 +36,14 @@ using namespace vis;
 
 int LIBVIS_MAIN(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
+  
+  boost::filesystem::path program_dir = boost::filesystem::path(argv[0]).parent_path();
+  if (!CUDAAutoTuner::Instance().LoadParametersFile(
+      (program_dir / "resources"  / "auto_tuning_result.txt").string().c_str())) {
+    LOG(WARNING) << "No auto-tuning file found -> using default parameters."
+                    " GPU performance is thus probably slightly worse than it"
+                    " could be.";
+  }
+  
   return RUN_ALL_TESTS();
 }
