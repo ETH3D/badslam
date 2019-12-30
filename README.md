@@ -41,6 +41,8 @@ lower-quality RGB-D videos. For more details, see the [documentation on camera c
 
 ## Pre-built binaries ##
 
+Binaries are available for download as [GitHub releases](https://github.com/ETH3D/badslam/releases).
+
 #### Windows ####
 
 For Windows, an executable compiled with Visual Studio 2019 is provided.
