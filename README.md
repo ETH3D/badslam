@@ -87,6 +87,8 @@ The following external dependencies are required.
 | [zlib](https://zlib.net/) |  |
 
 Notice that OpenCV is only required as a dependency for loop detection by DLib.
+Also notice that there are (at least) two different libraries with the name DLib,
+so be sure to install the correct one.
 
 The following external dependencies are optional.
 
