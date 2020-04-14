@@ -1333,7 +1333,7 @@ void MainWindow::DensifySurfels() {
   }
   
   int reconstruction_sparse_surfel_cell_size = 1;
-  int reconstruction_minimum_observation_count = 1;
+  int reconstruction_minimum_observation_count = 2;
   
   QDialog densify_dialog(this);
   densify_dialog.setWindowTitle(tr("Densify surfels"));
@@ -1342,12 +1342,12 @@ void MainWindow::DensifySurfels() {
   QGridLayout* settings_layout = new QGridLayout();
   
   QLabel* surfel_creation_cell_size_label = new QLabel(tr("Surfel creation cell size (in SLAM: %1; densest: 1): ").arg(bad_slam_->direct_ba().sparse_surfel_cell_size()));
-  QLineEdit* surfel_creation_cell_size_edit = new QLineEdit("1");
+  QLineEdit* surfel_creation_cell_size_edit = new QLineEdit(QString::number(reconstruction_sparse_surfel_cell_size));
   settings_layout->addWidget(surfel_creation_cell_size_label, 0, 0);
   settings_layout->addWidget(surfel_creation_cell_size_edit, 0, 1);
   
   QLabel* minimum_observation_count_label = new QLabel(tr("Minimum observation count (in SLAM: %1; densest: 1): ").arg(bad_slam_->direct_ba().min_observation_count()));
-  QLineEdit* minimum_observation_count_edit = new QLineEdit("1");
+  QLineEdit* minimum_observation_count_edit = new QLineEdit(QString::number(reconstruction_minimum_observation_count));
   settings_layout->addWidget(minimum_observation_count_label, 1, 0);
   settings_layout->addWidget(minimum_observation_count_edit, 1, 1);
   
