@@ -117,7 +117,7 @@ enable_testing()
 
 # libpng (packaged)
 add_subdirectory(libvis/third_party/libpng)
-set_target_properties(png png_static genfiles genprebuilt gensym genvers symbol-check PROPERTIES FOLDER "libvis/third_party/png")
+set_target_properties(png png_static genfiles PROPERTIES FOLDER "libvis/third_party/png")
 
 # GLEW (external, required)
 find_package(GLEW REQUIRED)

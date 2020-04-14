@@ -25,8 +25,15 @@ if (CMAKE_CUDA_COMPILER)
   find_package(realsense2)
 
   # Optional, only required for live Azure Kinect camera support
-  find_package(k4a)
-  find_package(k4arecord)
+  if (WIN32)
+    # Use a custom find script in the cmake subdirectory since the K4A SDK does
+    # not seem to ship cmake files on Windows
+    find_package(K4A)
+  else()
+    # On Linux, use the SDK-provided CMake files
+    find_package(k4a)
+    find_package(k4arecord)
+  endif()
   
   # Optional, only required for live Structure Core camera support
   find_package(Structure)
@@ -107,12 +114,22 @@ if (CMAKE_CUDA_COMPILER)
     )
   endif()
 
-  if (TARGET k4a::k4a)
-    target_link_libraries(badslam_baselib PRIVATE
-      k4a::k4a
-      k4a::k4arecord
-    )
-    target_compile_definitions(badslam_baselib PUBLIC HAVE_K4A)
+  if (WIN32)
+    if (TARGET K4APrebuilt AND TARGET K4ARecordPrebuilt)
+      target_link_libraries(badslam_baselib PUBLIC
+        K4APrebuilt
+        K4ARecordPrebuilt
+      )
+      target_compile_definitions(badslam_baselib PUBLIC HAVE_K4A)
+    endif()
+  else()
+    if (TARGET k4a::k4a)
+      target_link_libraries(badslam_baselib PUBLIC
+        k4a::k4a
+        k4a::k4arecord
+      )
+      target_compile_definitions(badslam_baselib PUBLIC HAVE_K4A)
+    endif()
   endif()
 
   if(MSVC)
