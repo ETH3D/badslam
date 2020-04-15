@@ -46,7 +46,6 @@ Binaries are available for download as [GitHub releases](https://github.com/ETH3
 #### Windows ####
 
 For Windows, an executable compiled with Visual Studio 2019 is provided.
-Please notice that for the moment, this is compiled without K4A.
 It is also required to download the loop closure resource files as described below in this ReadMe, or loop closures will be disabled. In addition,
 performing CUDA block-size autotuning as also described below is recommended.
 
