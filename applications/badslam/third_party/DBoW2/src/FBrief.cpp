@@ -12,6 +12,7 @@
 #include <sstream>
 
 #include <DVision/DVision.h>
+#include <DVision/BRIEF.h>
 #include "FBrief.h"
 
 using namespace std;

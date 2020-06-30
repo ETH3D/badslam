@@ -16,6 +16,7 @@
 
 #include "FClass.h"
 #include <DVision/DVision.h>
+#include <DVision/BRIEF.h>
 
 namespace DBoW2 {
 
