@@ -84,6 +84,7 @@
 #include <DBoW2/DBoW2.h>
 #include <DLoopDetector/DLoopDetector.h>
 #include <DVision/DVision.h>
+#include <DVision/BRIEF.h>
 #include <libvis/libvis.h>
 #include <libvis/rgbd_video.h>
 #include <libvis/sophus.h>
