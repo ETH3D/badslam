@@ -74,7 +74,7 @@ The following external dependencies are required.
 | ------------ | ------------------------ |
 | [Boost](https://www.boost.org/) | 1.54.0 |
 | [CUDA](https://developer.nvidia.com/cuda-downloads) | 8, 9.1, 10.1 |
-| [DLib](https://github.com/dorian3d/DLib) |  |
+| [DLib](https://github.com/dorian3d/DLib) | commit b6c28fb |
 | [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page) | 3.3.7 |
 | [g2o](https://github.com/RainerKuemmerle/g2o) |  |
 | [GLEW](http://glew.sourceforge.net/build.html) |  |
