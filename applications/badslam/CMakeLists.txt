@@ -38,7 +38,7 @@ if (CMAKE_CUDA_COMPILER)
   # Optional, only required for live Structure Core camera support
   find_package(Structure)
 
-  set(CMAKE_CUDA_STANDARD 11)
+  set(CMAKE_CUDA_STANDARD 14)
   set(CMAKE_CUDA_STANDARD_REQUIRED ON)
   
   # badslam_baselib (used by both the executable and the unit test).
