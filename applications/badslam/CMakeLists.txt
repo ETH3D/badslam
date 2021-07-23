@@ -97,7 +97,6 @@ if (CMAKE_CUDA_COMPILER)
   target_include_directories(badslam_baselib
     PRIVATE
       src
-      third_party/cub-1.8.0
       third_party/DBoW2/include/
       ${SuiteSparse_INCLUDE_DIRS}
       ${GLEW_INCLUDE_DIR}
@@ -107,6 +106,11 @@ if (CMAKE_CUDA_COMPILER)
       ${OpenCV_INCLUDE_DIRS}
       ${Boost_INCLUDE_DIR}
   )
+  if (CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 11)
+    target_include_directories(badslam_baselib PUBLIC
+      third_party/cub-1.8.0
+    )
+  endif()
   if (realsense2_FOUND)
     target_compile_options(badslam_baselib
       PRIVATE
@@ -180,7 +184,6 @@ if (CMAKE_CUDA_COMPILER)
   target_include_directories(badslam PRIVATE
     src
     third_party
-    third_party/cub-1.8.0
     third_party/DBoW2/include/
     ${realsense_INCLUDE_DIR}
     ${GLEW_INCLUDE_DIR}
@@ -208,7 +211,6 @@ if (CMAKE_CUDA_COMPILER)
   set_property(TARGET badslam_test PROPERTY FOLDER "badslam")
   target_include_directories(badslam_test PRIVATE
     src
-    third_party/cub-1.8.0
     ${gtest_SOURCE_DIR}/include
     ${gtest_SOURCE_DIR}
     ${GLEW_INCLUDE_DIRS}
