@@ -1568,10 +1568,12 @@ void MainWindow::WorkerThreadMain() {
   } else if (dataset_folder_path_ == string("live://structure")) {
     structure_input.Start(&rgbd_video_, &depth_scaling_, config_);
     live_input = 3;
-  } else if (dataset_folder_path_ == "live://k4a") {
+  } else if (dataset_folder_path_ == "live://k4a" ||
+             (dataset_folder_path_.size() >= 4 && dataset_folder_path_.substr(dataset_folder_path_.size() - 4) == ".mkv")) {
     k4a_input.Start(
         &rgbd_video_,
         &depth_scaling_,
+        (dataset_folder_path_ == "live://k4a") ? "" : dataset_folder_path_,
         config_.k4a_fps,
         config_.k4a_resolution,
         config_.k4a_factor,
@@ -1803,6 +1805,9 @@ void MainWindow::WorkerThreadMain() {
       k4a_input.GetNextFrame();
     } else if (live_input == 3) {
       structure_input.GetNextFrame();
+    }
+    if (frame_index_ >= rgbd_video_.frame_count()) {
+      break;
     }
     
     // Get the current RGB-D frame's RGB and depth images. This may wait for I/O

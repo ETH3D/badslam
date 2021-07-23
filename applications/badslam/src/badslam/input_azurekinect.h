@@ -80,7 +80,7 @@ class K4AInputThread {
   //                   be stored.
   // @param depth_scaling Output parameter in which the depth scaling will be returned:
   //                      recorded_depth = depth_scaling * depth_in_meters
-  void Start(RGBDVideo<Vec3u8, u16>* rgbd_video, float* depth_scaling, int fps, int resolution, int _factor, bool use_ir, string mode, int exposure);
+  void Start(RGBDVideo<Vec3u8, u16>* rgbd_video, float* depth_scaling, const string& dataset_path, int fps, int resolution, int _factor, bool use_ir, string mode, int exposure);
   
   // Retrieves the next input frame and stores it in the RGBDVideo given to the
   // constructor. Blocks while no new input frame is available.
@@ -110,13 +110,14 @@ class K4AInputThread {
 
   k4a_depth_mode_t k4a_convert_string_to_mode(std::string strmode);
 
-  k4a_color_resolution_t k4a_convert_uint_to_resolution(int fps);
+  k4a_color_resolution_t k4a_convert_uint_to_resolution(int vertical_resolution);
   
   std::mutex queue_mutex;
   std::condition_variable new_frame_condition_;
   vector<shared_ptr<Image<u16>>> depth_image_queue;
   vector<shared_ptr<Image<Vec3u8>>> color_image_queue;
-  k4a_device_t device{ NULL };
+  k4a_device_t device = nullptr;
+  k4a_playback_t playback = nullptr;
   k4a_capture_t capture;
   k4a_calibration_t calibration;
   k4a_transformation_t transformation;
@@ -158,9 +159,10 @@ class K4AInputThread {
 // functions are called.
 class K4AInputThread {
  public:
-  void Start(RGBDVideo<Vec3u8, u16>* rgbd_video, float* depth_scaling, int fps, int resolution, int _factor, bool use_ir, string mode, int exposure) {
+  void Start(RGBDVideo<Vec3u8, u16>* rgbd_video, float* depth_scaling, const string& dataset_path, int fps, int resolution, int _factor, bool use_ir, string mode, int exposure) {
     (void) rgbd_video;
     (void) depth_scaling;
+    (void) dataset_path;
     (void) fps;
     (void) resolution;
     (void) _factor;

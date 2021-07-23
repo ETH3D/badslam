@@ -665,7 +665,8 @@ bool SettingsDialog::ParseSettings() {
   }
   *this->dataset_path = dataset_path_edit->text();
   
-  if (!this->dataset_path->startsWith("live://")) {
+  if (!this->dataset_path->startsWith("live://") &&
+      !this->dataset_path->endsWith(".mkv")) {
     boost::filesystem::path dataset_path = this->dataset_path->toStdString();
     if (!boost::filesystem::exists(dataset_path / "depth") ||
         !boost::filesystem::exists(dataset_path / "rgb") ||

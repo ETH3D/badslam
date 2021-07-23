@@ -62,22 +62,22 @@ uint32_t K4AInputThread::k4a_convert_fps_to_uint(k4a_fps_t fps) {
 }
 
 k4a_fps_t K4AInputThread::k4a_convert_uint_to_fps(int fps) {
-  k4a_fps_t fps_int;
+  k4a_fps_t fps_enum;
   switch (fps) {
   case 5:
-    fps_int = K4A_FRAMES_PER_SECOND_5;
+    fps_enum = K4A_FRAMES_PER_SECOND_5;
     break;
   case 15:
-    fps_int = K4A_FRAMES_PER_SECOND_15;
+    fps_enum = K4A_FRAMES_PER_SECOND_15;
     break;
   case 30:
-    fps_int = K4A_FRAMES_PER_SECOND_30;
+    fps_enum = K4A_FRAMES_PER_SECOND_30;
     break;
   default:
-    fps_int = K4A_FRAMES_PER_SECOND_30;
+    fps_enum = K4A_FRAMES_PER_SECOND_30;
     break;
   }
-  return fps_int;
+  return fps_enum;
 }
 
 k4a_depth_mode_t K4AInputThread::k4a_convert_string_to_mode(const std::string strmode) {
@@ -94,32 +94,32 @@ k4a_depth_mode_t K4AInputThread::k4a_convert_string_to_mode(const std::string st
   return k4a_mode;
 }
 
-k4a_color_resolution_t K4AInputThread::k4a_convert_uint_to_resolution(int fps) {
-  k4a_color_resolution_t fps_int;
-  switch (fps) {
+k4a_color_resolution_t K4AInputThread::k4a_convert_uint_to_resolution(int vertical_resolution) {
+  k4a_color_resolution_t resolution_enum;
+  switch (vertical_resolution) {
   case 720:
-    fps_int = K4A_COLOR_RESOLUTION_720P;
+    resolution_enum = K4A_COLOR_RESOLUTION_720P;
     break;
   case 1080:
-    fps_int = K4A_COLOR_RESOLUTION_1080P;
+    resolution_enum = K4A_COLOR_RESOLUTION_1080P;
     break;
   case 1440:
-    fps_int = K4A_COLOR_RESOLUTION_1440P;
+    resolution_enum = K4A_COLOR_RESOLUTION_1440P;
     break;
   case 1536:
-    fps_int = K4A_COLOR_RESOLUTION_1536P;
+    resolution_enum = K4A_COLOR_RESOLUTION_1536P;
     break;
   case 2160:
-      fps_int = K4A_COLOR_RESOLUTION_2160P;
+      resolution_enum = K4A_COLOR_RESOLUTION_2160P;
       break;
   case 3072:
-    fps_int = K4A_COLOR_RESOLUTION_3072P;
+    resolution_enum = K4A_COLOR_RESOLUTION_3072P;
     break;
   default:
-    fps_int = K4A_COLOR_RESOLUTION_720P;
+    resolution_enum = K4A_COLOR_RESOLUTION_720P;
     break;
   }
-  return fps_int;
+  return resolution_enum;
 }
 
 void K4AInputThread::init_undistortion_map() {
@@ -264,7 +264,9 @@ static void print_calibration(k4a_calibration_camera_t *calibration) {
 }
 
 void K4AInputThread::Start(
-    RGBDVideo<Vec3u8, u16>* rgbd_video, float* depth_scaling,
+    RGBDVideo<Vec3u8, u16>* rgbd_video,
+    float* depth_scaling,
+    const string& dataset_path,
     int fps, int resolution, int _factor,
     bool _use_ir, string mode, int exposure) {
     factor = _factor;
@@ -277,9 +279,16 @@ void K4AInputThread::Start(
         return;
     }
 
-    if (K4A_RESULT_SUCCEEDED != k4a_device_open(K4A_DEVICE_DEFAULT, &device)) {
+    if (!dataset_path.empty()) {
+      if (K4A_RESULT_SUCCEEDED != k4a_playback_open(dataset_path.c_str(), &playback)) {
+        LOG(FATAL) << "WARNING: Failed to open K4A dataset with path " << dataset_path;
+        return;
+      }
+    } else {
+      if (K4A_RESULT_SUCCEEDED != k4a_device_open(K4A_DEVICE_DEFAULT, &device)) {
         LOG(FATAL) << "WARNING: Failed to open K4A device!";
         return;
+      }
     }
 
     config.camera_fps = k4a_convert_uint_to_fps(fps);
@@ -294,37 +303,40 @@ void K4AInputThread::Start(
     else {
         config.color_resolution = K4A_COLOR_RESOLUTION_OFF;
     }
-    //config.depth_mode = K4A_DEPTH_MODE_NFOV_2X2BINNED;
-    //config.depth_mode = K4A_DEPTH_MODE_WFOV_UNBINNED;
-    //config.depth_mode = K4A_DEPTH_MODE_WFOV_2X2BINNED;
     config.depth_mode = k4a_convert_string_to_mode(mode);
 
-    if (K4A_RESULT_SUCCEEDED != k4a_device_start_cameras(device, &config)) {
-        LOG(FATAL) << "WARNING: Failed to open K4A device!";
-    }
-
-    if (K4A_RESULT_SUCCEEDED !=
-        k4a_device_get_calibration(device, config.depth_mode, config.color_resolution, &calibration)) {
-        LOG(FATAL) << "WARNING: Failed to get calibration for K4A device!";
-    }
-    //k4a_device_set_color_control(
-    //    device,
-    //    K4A_COLOR_CONTROL_POWERLINE_FREQUENCY,
-    //    K4A_COLOR_CONTROL_MODE_MANUAL,
-    //    50);
-
-    if (!use_ir) {
-      if (exposure > 0) {
-          K4A_CHECK(k4a_device_set_color_control(
-              device,
-              K4A_COLOR_CONTROL_EXPOSURE_TIME_ABSOLUTE,
-              K4A_COLOR_CONTROL_MODE_MANUAL,
-              exposure));
-      } else {
-          K4A_CHECK(k4a_device_set_color_control(
-              device,
-              K4A_COLOR_CONTROL_EXPOSURE_TIME_ABSOLUTE,
-              K4A_COLOR_CONTROL_MODE_AUTO, 0));
+    if (device) {
+      if (K4A_RESULT_SUCCEEDED != k4a_device_start_cameras(device, &config)) {
+          LOG(FATAL) << "Failed to start K4A device cameras!";
+      }
+  
+      if (K4A_RESULT_SUCCEEDED !=
+          k4a_device_get_calibration(device, config.depth_mode, config.color_resolution, &calibration)) {
+          LOG(FATAL) << "Failed to get calibration for K4A device!";
+      }
+      //k4a_device_set_color_control(
+      //    device,
+      //    K4A_COLOR_CONTROL_POWERLINE_FREQUENCY,
+      //    K4A_COLOR_CONTROL_MODE_MANUAL,
+      //    50);
+  
+      if (!use_ir) {
+        if (exposure > 0) {
+            K4A_CHECK(k4a_device_set_color_control(
+                device,
+                K4A_COLOR_CONTROL_EXPOSURE_TIME_ABSOLUTE,
+                K4A_COLOR_CONTROL_MODE_MANUAL,
+                exposure));
+        } else {
+            K4A_CHECK(k4a_device_set_color_control(
+                device,
+                K4A_COLOR_CONTROL_EXPOSURE_TIME_ABSOLUTE,
+                K4A_COLOR_CONTROL_MODE_AUTO, 0));
+        }
+      }
+    } else {
+      if (K4A_RESULT_SUCCEEDED != k4a_playback_get_calibration(playback, &calibration)) {
+        LOG(FATAL) << "Failed to get calibration for K4A dataset!";
       }
     }
 
@@ -409,8 +421,11 @@ void K4AInputThread::GetNextFrame() {
     color_image_queue.clear();
     first = false;
   }
-  while (depth_image_queue.empty()) {
+  while (depth_image_queue.empty() && !exit_) {
     new_frame_condition_.wait(lock);
+  }
+  if (exit_) {
+    return;
   }
   
   shared_ptr<Image<u16>> depth_image = depth_image_queue.front();
@@ -473,43 +488,69 @@ void K4AInputThread::ThreadMain() {
   k4a_wait_result_t result = K4A_WAIT_RESULT_TIMEOUT;
   int32_t timeout_sec_for_first_capture = 60;
   
-  // Wait for the first capture in a loop
-  while (!exit_ && (clock() - first_capture_start) < (CLOCKS_PER_SEC * timeout_sec_for_first_capture)) {
-    result = k4a_device_get_capture(device, &capture, K4A_WAIT_INFINITE);
-    if (result == K4A_WAIT_RESULT_SUCCEEDED) {
-      k4a_capture_release(capture);
-      break;
-    } else if (result == K4A_WAIT_RESULT_FAILED) {
-      LOG(ERROR) << "Runtime error: k4a_device_get_capture() returned error: " << result;
+  if (device) {
+    // Wait for the first capture in a loop
+    while (!exit_ && (clock() - first_capture_start) < (CLOCKS_PER_SEC * timeout_sec_for_first_capture)) {
+      result = k4a_device_get_capture(device, &capture, K4A_WAIT_INFINITE);
+      if (result == K4A_WAIT_RESULT_SUCCEEDED) {
+        k4a_capture_release(capture);
+        break;
+      } else if (result == K4A_WAIT_RESULT_FAILED) {
+        LOG(ERROR) << "Runtime error: k4a_device_get_capture() returned error: " << result;
+      }
     }
   }
   
+  std::chrono::steady_clock::time_point last_frame_time = std::chrono::steady_clock::now();
   while (true) {
     if (exit_) {
       break;
     }
     
-    // uint32_t camera_fps = k4a_convert_fps_to_uint(config.camera_fps);
-    
     //clock_t recording_start = clock();
     //int32_t timeout_ms = 1000 / camera_fps;
     //result = k4a_device_get_capture(device, &capture, timeout_ms);
-    result = k4a_device_get_capture(device, &capture, K4A_WAIT_INFINITE);
-    if (result == K4A_WAIT_RESULT_TIMEOUT) {
-      LOG(WARNING) << "k4a timeout device get capture";
-      continue;
-    } else if (result != K4A_WAIT_RESULT_SUCCEEDED) {
-      LOG(ERROR) << "Runtime error: k4a_device_get_capture() returned error: " << result;
-      break;
+    
+    if (device) {
+      result = k4a_device_get_capture(device, &capture, K4A_WAIT_INFINITE);
+      
+      if (result == K4A_WAIT_RESULT_TIMEOUT) {
+        LOG(WARNING) << "k4a timeout device get capture";
+        continue;
+      } else if (result != K4A_WAIT_RESULT_SUCCEEDED) {
+        LOG(ERROR) << "Runtime error: k4a_device_get_capture() returned error: " << result;
+        break;
+      }
+    } else {
+      const uint32_t camera_fps = k4a_convert_fps_to_uint(config.camera_fps);
+      const float frame_interval = 1.f / camera_fps;
+      
+      float elapsed_time = std::chrono::duration<float>(std::chrono::steady_clock::now() - last_frame_time).count();
+      if (elapsed_time < frame_interval) {
+        std::this_thread::sleep_for(std::chrono::duration<float>(frame_interval - elapsed_time));
+      }
+      last_frame_time = std::chrono::steady_clock::now();
+      
+      k4a_stream_result_t stream_result = k4a_playback_get_next_capture(playback, &capture);
+      
+      if (stream_result == K4A_STREAM_RESULT_EOF) {
+        LOG(INFO) << "End of dataset reached.";
+        break;
+      } else if (stream_result != K4A_STREAM_RESULT_SUCCEEDED) {
+        LOG(ERROR) << "Runtime error: k4a_playback_get_next_capture() returned error: " << stream_result;
+        break;
+      }
     }
     
     // Access the depth16 image
     k4a_image_t k4a_depth_image = k4a_capture_get_depth_image(capture);
     
     // Access the rgb_image image
-    k4a_image_t k4a_rgb_image{ NULL };
-	if (!use_ir)
-		k4a_rgb_image = k4a_capture_get_color_image(capture);
+    k4a_image_t k4a_rgb_image = nullptr;
+    
+	  if (!use_ir) {
+		  k4a_rgb_image = k4a_capture_get_color_image(capture);
+		}
     
     if ((!use_ir && k4a_rgb_image == NULL) || k4a_depth_image == NULL) {
       LOG(WARNING) << "Failed to get both depth and rgb images, skipping frame";
@@ -531,42 +572,34 @@ void K4AInputThread::ThreadMain() {
 
     cv::Mat cv_uncompressed_color_image;
     cv::Mat cv_undistorted_ir;
-	if (!use_ir)
-	{
-		if (config.color_format == K4A_IMAGE_FORMAT_COLOR_MJPG) {
-			if (!decode_image_opencv(
-				k4a_rgb_image,
-				&uncompressed_color_image,
-				cv_uncompressed_color_image)) {
-				break;
-			}
-		}
-		else if (config.color_format == K4A_IMAGE_FORMAT_COLOR_BGRA32) {
-			cv_uncompressed_color_image = cv::Mat(
-				height,
-				width,
-				CV_8UC4,
-				k4a_image_get_buffer(k4a_rgb_image));
-		}
-		else if (config.color_format == K4A_IMAGE_FORMAT_COLOR_YUY2) {
-			size_t nSize = k4a_image_get_size(k4a_rgb_image);
-			uchar* buf = k4a_image_get_buffer(k4a_rgb_image);
-			cv::Mat rawData(height + height / 2, width, CV_8UC1, (void*)buf);
-			LOG(INFO) << "rawdata size is " << nSize;
-			LOG(INFO) << "rawdata shape is " << rawData.size();
-			cv::Mat output(height, width, CV_8UC3);
-			cv::cvtColor(rawData, output, CV_YUV2BGR_YUY2, 0);
-			cv::imshow("cv", output);
-			cv::waitKey(10000);
-			LOG(INFO) << "Color shape is " << output.size();
-			cv::imshow("cv", output);
-			cv::waitKey(10000);
-		}
-		else if (config.color_format == K4A_IMAGE_FORMAT_COLOR_NV12) {
-			uchar* buf = k4a_image_get_buffer(k4a_rgb_image);
-			cv::Mat rawData(height * 1.5, width, CV_8UC1, (void*)buf);
-			cv::cvtColor(rawData, cv_uncompressed_color_image, CV_YUV2RGB_NV21, 0);
-		}
+    
+	  if (!use_ir) {
+	    k4a_image_format_t color_format = k4a_image_get_format(k4a_rgb_image);
+		  if (color_format == K4A_IMAGE_FORMAT_COLOR_MJPG) {
+			  if (!decode_image_opencv(
+				  k4a_rgb_image,
+				  &uncompressed_color_image,
+				  cv_uncompressed_color_image)) {
+				  break;
+			  }
+		  } else if (color_format == K4A_IMAGE_FORMAT_COLOR_BGRA32) {
+			  cv_uncompressed_color_image = cv::Mat(
+				  height,
+				  width,
+				  CV_8UC4,
+				  k4a_image_get_buffer(k4a_rgb_image));
+		  } else if (color_format == K4A_IMAGE_FORMAT_COLOR_YUY2) {
+			  uchar* buf = k4a_image_get_buffer(k4a_rgb_image);
+			  cv::Mat rawData(height, width, CV_8UC2, (void*)buf);
+			  cv::cvtColor(rawData, cv_uncompressed_color_image, CV_YUV2BGR_YUY2, 0);
+		  } else if (color_format == K4A_IMAGE_FORMAT_COLOR_NV12) {
+			  uchar* buf = k4a_image_get_buffer(k4a_rgb_image);
+			  cv::Mat rawData(height * 1.5, width, CV_8UC1, (void*)buf);
+			  cv::cvtColor(rawData, cv_uncompressed_color_image, CV_YUV2RGB_NV21, 0);
+		  } else {
+		    LOG(FATAL) << "Color format not supported: " << color_format;
+		  }
+		  
       // Reproject depth on color
       if (!transform_depth_to_color(
           transformation,
@@ -589,53 +622,51 @@ void K4AInputThread::ThreadMain() {
           cv_undistorted_color,
           cv_undistorted_depth);
       cv::cvtColor(cv_undistorted_color, cv_undistorted_color, CV_BGRA2RGB);
-	}
-	else {
-		remap(cv_depth, cv_undistorted_depth, map1, map2, cv::INTER_LINEAR, cv::BORDER_CONSTANT);
-
-		k4a_image_t k4a_ir_image = k4a_capture_get_ir_image(capture);
-		if (k4a_ir_image == NULL) {
-			LOG(WARNING) << "Failed to get ir rgb images, skipping frame";
-			if (k4a_rgb_image) {
-				k4a_image_release(k4a_rgb_image);
-			}
-			if (k4a_depth_image) {
-				k4a_image_release(k4a_depth_image);
-			}
-			if (k4a_ir_image) {
-				k4a_image_release(k4a_ir_image);
-			}
-			k4a_capture_release(capture);
-			continue;
-		}
-		cv::Mat cv_ir_image(
-			k4a_image_get_height_pixels(k4a_ir_image),
-			k4a_image_get_width_pixels(k4a_ir_image),
-			CV_16UC1,
-			k4a_image_get_buffer(k4a_ir_image));
-		cv::Mat cv_ir_image_8;
-		cv_ir_image.convertTo(cv_ir_image_8, CV_8U, 1.f / 4.f);
-		remap(cv_ir_image_8, cv_undistorted_ir, map1, map2, cv::INTER_LINEAR, cv::BORDER_CONSTANT);
-		cv::cvtColor(cv_undistorted_ir, cv_undistorted_color, CV_GRAY2RGB);
-	}
+	  } else {  // if (use_ir) {
+		  remap(cv_depth, cv_undistorted_depth, map1, map2, cv::INTER_LINEAR, cv::BORDER_CONSTANT);
+  
+		  k4a_image_t k4a_ir_image = k4a_capture_get_ir_image(capture);
+		  if (k4a_ir_image == NULL) {
+			  LOG(WARNING) << "Failed to get ir rgb images, skipping frame";
+			  if (k4a_rgb_image) {
+				  k4a_image_release(k4a_rgb_image);
+			  }
+			  if (k4a_depth_image) {
+				  k4a_image_release(k4a_depth_image);
+			  }
+			  if (k4a_ir_image) {
+				  k4a_image_release(k4a_ir_image);
+			  }
+			  k4a_capture_release(capture);
+			  continue;
+		  }
+		  cv::Mat cv_ir_image(
+			  k4a_image_get_height_pixels(k4a_ir_image),
+			  k4a_image_get_width_pixels(k4a_ir_image),
+			  CV_16UC1,
+			  k4a_image_get_buffer(k4a_ir_image));
+		  cv::Mat cv_ir_image_8;
+		  cv_ir_image.convertTo(cv_ir_image_8, CV_8U, 1.f / 4.f);
+		  remap(cv_ir_image_8, cv_undistorted_ir, map1, map2, cv::INTER_LINEAR, cv::BORDER_CONSTANT);
+		  cv::cvtColor(cv_undistorted_ir, cv_undistorted_color, CV_GRAY2RGB);
+	  }
     
     // Add the frame to the queue
     unique_lock<mutex> lock(queue_mutex);
     
     shared_ptr<Image<u16>> depth_image(new Image<u16>(
-        cv_undistorted_depth.cols, 
+        cv_undistorted_depth.cols,
         cv_undistorted_depth.rows));
     depth_image->SetTo(
-        reinterpret_cast<const u16*>(cv_undistorted_depth.data), 
+        reinterpret_cast<const u16*>(cv_undistorted_depth.data),
         cv_undistorted_depth.step[0]);
-    //LOG(INFO) << "K4A after setto";
     depth_image_queue.push_back(depth_image);
     
     shared_ptr<Image<Vec3u8>> color_image(
-        new Image<Vec3u8>(cv_undistorted_color.cols, 
+        new Image<Vec3u8>(cv_undistorted_color.cols,
         cv_undistorted_color.rows));
     color_image->SetTo(
-        reinterpret_cast<const Vec3u8*>(cv_undistorted_color.data), 
+        reinterpret_cast<const Vec3u8*>(cv_undistorted_color.data),
         cv_undistorted_color.step[0]);
     color_image_queue.push_back(color_image);
     
@@ -649,7 +680,18 @@ void K4AInputThread::ThreadMain() {
     }
     k4a_capture_release(capture);
   }
-  k4a_device_close(device);
+  
+  if (device) {
+    k4a_device_close(device);
+    device = nullptr;
+  } else {
+    k4a_playback_close(playback);
+    playback = nullptr;
+  }
+  
+  unique_lock<mutex> lock(queue_mutex);
+  exit_ = true;
+  new_frame_condition_.notify_all();
 }
 
 }

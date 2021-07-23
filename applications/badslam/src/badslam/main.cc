@@ -535,9 +535,12 @@ int LIBVIS_QT_MAIN(int argc, char** argv) {
   } else if (dataset_folder_path == "live://structure") {
     structure_input.Start(&rgbd_video, &depth_scaling, bad_slam_config);
     live_input = 3;
-  } else if (dataset_folder_path == "live://k4a") {
-    k4a_input.Start(&rgbd_video,
+  } else if (dataset_folder_path == "live://k4a" ||
+             (dataset_folder_path.size() >= 4 && dataset_folder_path.substr(dataset_folder_path.size() - 4) == ".mkv")) {
+    k4a_input.Start(
+        &rgbd_video,
         &depth_scaling,
+        (dataset_folder_path == "live://k4a") ? "" : dataset_folder_path,
         bad_slam_config.k4a_fps,
         bad_slam_config.k4a_resolution,
         bad_slam_config.k4a_factor,
