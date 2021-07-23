@@ -401,6 +401,37 @@ int LIBVIS_QT_MAIN(int argc, char** argv) {
       bad_slam_config.structure_visible_exposure_time_help);
   
   
+  // K4A options.
+  cmd_parser.NamedParameter(
+      "--k4a_mode",
+      &bad_slam_config.k4a_mode, /*required*/ false,
+      bad_slam_config.k4a_mode_help);
+  
+  cmd_parser.NamedParameter(
+      "--k4a_fps",
+      &bad_slam_config.k4a_fps, /*required*/ false,
+      bad_slam_config.k4a_fps_help);
+  
+  cmd_parser.NamedParameter(
+      "--k4a_resolution",
+      &bad_slam_config.k4a_resolution, /*required*/ false,
+      bad_slam_config.k4a_resolution_help);
+  
+  cmd_parser.NamedParameter(
+      "--k4a_factor",
+      &bad_slam_config.k4a_factor, /*required*/ false,
+      bad_slam_config.k4a_factor_help);
+  
+  bad_slam_config.k4a_use_ir = cmd_parser.Flag(
+      "--k4a_use_ir",
+      bad_slam_config.k4a_use_ir_help);
+  
+  cmd_parser.NamedParameter(
+      "--k4a_exposure",
+      &bad_slam_config.k4a_exposure, /*required*/ false,
+      bad_slam_config.k4a_exposure_help);
+  
+  
   // These sequential parameters must be specified last (in code).
   string dataset_folder_path;
   cmd_parser.SequentialParameter(
@@ -505,12 +536,12 @@ int LIBVIS_QT_MAIN(int argc, char** argv) {
     structure_input.Start(&rgbd_video, &depth_scaling, bad_slam_config);
     live_input = 3;
   } else if (dataset_folder_path == "live://k4a") {
-    k4a_input.Start(&rgbd_video, 
-        &depth_scaling, 
+    k4a_input.Start(&rgbd_video,
+        &depth_scaling,
         bad_slam_config.k4a_fps,
-        bad_slam_config.k4a_resolution, 
+        bad_slam_config.k4a_resolution,
         bad_slam_config.k4a_factor,
-        bad_slam_config.k4a_use_depth,
+        bad_slam_config.k4a_use_ir,
         bad_slam_config.k4a_mode,
         bad_slam_config.k4a_exposure
     );

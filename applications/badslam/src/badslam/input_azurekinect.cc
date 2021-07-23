@@ -124,7 +124,7 @@ k4a_color_resolution_t K4AInputThread::k4a_convert_uint_to_resolution(int fps) {
 
 void K4AInputThread::init_undistortion_map() {
   auto intrinsics = calibration.color_camera_calibration.intrinsics.parameters.param;
-  if (use_depth) {
+  if (use_ir) {
     intrinsics = calibration.depth_camera_calibration.intrinsics.parameters.param;
   }
   
@@ -266,12 +266,10 @@ static void print_calibration(k4a_calibration_camera_t *calibration) {
 void K4AInputThread::Start(
     RGBDVideo<Vec3u8, u16>* rgbd_video, float* depth_scaling,
     int fps, int resolution, int _factor,
-    int _use_depth, string mode, int exposure) {
+    bool _use_ir, string mode, int exposure) {
     factor = _factor;
     rgbd_video_ = rgbd_video;
-    if (_use_depth != 0) {
-      use_depth = true;
-    }
+    use_ir = _use_ir;
 
     uint32_t device_count = k4a_device_get_installed_count();
     if (device_count == 0) {
@@ -289,7 +287,7 @@ void K4AInputThread::Start(
     //config.color_format = K4A_IMAGE_FORMAT_COLOR_MJPG;
     //config.color_format = K4A_IMAGE_FORMAT_COLOR_YUY2;
     //config.color_format = K4A_IMAGE_FORMAT_COLOR_NV12;
-    if (!use_depth) {
+    if (!use_ir) {
         config.color_resolution = k4a_convert_uint_to_resolution(resolution);
         config.synchronized_images_only = true;
     }
@@ -315,14 +313,19 @@ void K4AInputThread::Start(
     //    K4A_COLOR_CONTROL_MODE_MANUAL,
     //    50);
 
-    if (use_depth) {
-        if (exposure > 0) {
-            K4A_CHECK(k4a_device_set_color_control(
-                device,
-                K4A_COLOR_CONTROL_EXPOSURE_TIME_ABSOLUTE,
-                K4A_COLOR_CONTROL_MODE_MANUAL,
-                exposure));
-        }
+    if (!use_ir) {
+      if (exposure > 0) {
+          K4A_CHECK(k4a_device_set_color_control(
+              device,
+              K4A_COLOR_CONTROL_EXPOSURE_TIME_ABSOLUTE,
+              K4A_COLOR_CONTROL_MODE_MANUAL,
+              exposure));
+      } else {
+          K4A_CHECK(k4a_device_set_color_control(
+              device,
+              K4A_COLOR_CONTROL_EXPOSURE_TIME_ABSOLUTE,
+              K4A_COLOR_CONTROL_MODE_AUTO, 0));
+      }
     }
 
     transformation = k4a_transformation_create(&calibration);
@@ -330,7 +333,7 @@ void K4AInputThread::Start(
     print_calibration(&calibration.color_camera_calibration);
     print_calibration(&calibration.depth_camera_calibration);
 
-    if (!use_depth) {
+    if (!use_ir) {
         width = calibration.color_camera_calibration.resolution_width;
         height = calibration.color_camera_calibration.resolution_height;
     }
@@ -505,10 +508,10 @@ void K4AInputThread::ThreadMain() {
     
     // Access the rgb_image image
     k4a_image_t k4a_rgb_image{ NULL };
-	if (!use_depth)
+	if (!use_ir)
 		k4a_rgb_image = k4a_capture_get_color_image(capture);
     
-    if ((!use_depth && k4a_rgb_image == NULL) || k4a_depth_image == NULL) {
+    if ((!use_ir && k4a_rgb_image == NULL) || k4a_depth_image == NULL) {
       LOG(WARNING) << "Failed to get both depth and rgb images, skipping frame";
       if (k4a_rgb_image) {
         k4a_image_release(k4a_rgb_image);
@@ -528,7 +531,7 @@ void K4AInputThread::ThreadMain() {
 
     cv::Mat cv_uncompressed_color_image;
     cv::Mat cv_undistorted_ir;
-	if (!use_depth)
+	if (!use_ir)
 	{
 		if (config.color_format == K4A_IMAGE_FORMAT_COLOR_MJPG) {
 			if (!decode_image_opencv(

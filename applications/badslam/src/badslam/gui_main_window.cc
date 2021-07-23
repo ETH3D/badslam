@@ -1570,12 +1570,12 @@ void MainWindow::WorkerThreadMain() {
     live_input = 3;
   } else if (dataset_folder_path_ == "live://k4a") {
     k4a_input.Start(
-        &rgbd_video_, 
-        &depth_scaling_, 
-        config_.k4a_fps, 
-        config_.k4a_resolution, 
+        &rgbd_video_,
+        &depth_scaling_,
+        config_.k4a_fps,
+        config_.k4a_resolution,
         config_.k4a_factor,
-        config_.k4a_use_depth,
+        config_.k4a_use_ir,
         config_.k4a_mode,
         config_.k4a_exposure);
     live_input = 2;

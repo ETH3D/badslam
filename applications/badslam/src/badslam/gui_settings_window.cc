@@ -417,23 +417,93 @@ SettingsDialog::SettingsDialog(QString* dataset_path, BadSlamConfig* config, boo
   QGridLayout* k4a_layout = new QGridLayout();
   row = 0;
 
-  k4a_mode_edit = new QLineEdit("");
-  add_option(tr("Mode(nfov) (nfov,nfov2x2,wfov,wfov2x2): "), k4a_mode_edit, k4a_layout, &row);
+  k4a_layout->addWidget(new QLabel(tr("FOV mode: ")), row, 0);
+  k4a_mode_combo = new QComboBox();
+  k4a_mode_combo->addItem(tr("nfov"));
+  k4a_mode_values.push_back("nfov");
+  k4a_mode_combo->addItem(tr("nfov2x2"));
+  k4a_mode_values.push_back("nfov2x2");
+  k4a_mode_combo->addItem(tr("wfov"));
+  k4a_mode_values.push_back("wfov");
+  k4a_mode_combo->addItem(tr("wfov2x2"));
+  k4a_mode_values.push_back("wfov2x2");
+  found = false;
+  for (usize i = 0; i < k4a_mode_values.size(); ++ i) {
+    if (config->k4a_mode == k4a_mode_values[i]) {
+      k4a_mode_combo->setCurrentIndex(i);
+      found = true;
+      break;
+    }
+  }
+  if (!found) {
+    LOG(ERROR) << "Did not find the given K4A FOV mode, choosing the default instead.";
+    k4a_mode_combo->setCurrentIndex(0);
+  }
+  k4a_layout->addWidget(k4a_mode_combo, row, 1);
+  ++ row;
 
-  k4a_fps_edit = new QLineEdit(QString::number(config->k4a_fps));
-  add_option(tr("Fps(30) (30,15,5): "), k4a_fps_edit, k4a_layout, &row);
+  k4a_layout->addWidget(new QLabel(tr("FPS: ")), row, 0);
+  k4a_fps_combo = new QComboBox();
+  k4a_fps_combo->addItem(tr("30"));
+  k4a_fps_values.push_back(30);
+  k4a_fps_combo->addItem(tr("15"));
+  k4a_fps_values.push_back(15);
+  k4a_fps_combo->addItem(tr("5"));
+  k4a_fps_values.push_back(5);
+  found = false;
+  for (usize i = 0; i < k4a_fps_values.size(); ++ i) {
+    if (config->k4a_fps == k4a_fps_values[i]) {
+      k4a_fps_combo->setCurrentIndex(i);
+      found = true;
+      break;
+    }
+  }
+  if (!found) {
+    LOG(ERROR) << "Did not find the given K4A FPS setting, choosing the default instead.";
+    k4a_fps_combo->setCurrentIndex(0);
+  }
+  k4a_layout->addWidget(k4a_fps_combo, row, 1);
+  ++ row;
 
-  k4a_resolution_edit = new QLineEdit(QString::number(config->k4a_resolution));
-  add_option(tr("Resolution(720) (720,1080,1400): "), k4a_resolution_edit, k4a_layout, &row);
+  k4a_layout->addWidget(new QLabel(tr("RGB resolution: ")), row, 0);
+  k4a_resolution_combo = new QComboBox();
+  k4a_resolution_combo->addItem(tr("1280 * 720 (16:9)"));
+  k4a_resolution_values.push_back(720);
+  k4a_resolution_combo->addItem(tr("1920 * 1080 (16:9)"));
+  k4a_resolution_values.push_back(1080);
+  k4a_resolution_combo->addItem(tr("2560 * 1440 (16:9)"));
+  k4a_resolution_values.push_back(1440);
+  k4a_resolution_combo->addItem(tr("2048 * 1536 (4:3)"));
+  k4a_resolution_values.push_back(1536);
+  k4a_resolution_combo->addItem(tr("3840 * 2160 (16:9)"));
+  k4a_resolution_values.push_back(2160);
+  k4a_resolution_combo->addItem(tr("4096 * 3072 (4:3)"));
+  k4a_resolution_values.push_back(3072);
+  found = false;
+  for (usize i = 0; i < k4a_resolution_values.size(); ++ i) {
+    if (config->k4a_resolution == k4a_resolution_values[i]) {
+      k4a_resolution_combo->setCurrentIndex(i);
+      found = true;
+      break;
+    }
+  }
+  if (!found) {
+    LOG(ERROR) << "Did not find the given K4A resolution setting, choosing the default instead.";
+    k4a_resolution_combo->setCurrentIndex(0);
+  }
+  k4a_layout->addWidget(k4a_resolution_combo, row, 1);
+  ++ row;
 
   k4a_factor_edit = new QLineEdit(QString::number(config->k4a_factor));
-  add_option(tr("Downscaling factor (1)"), k4a_factor_edit, k4a_layout, &row);
+  add_option(tr("Downscaling factor"), k4a_factor_edit, k4a_layout, &row);
 
-  k4a_use_depth_edit = new QLineEdit(QString::number(config->k4a_use_depth));
-  add_option(tr("Use depth and ir only (0)"), k4a_use_depth_edit, k4a_layout, &row);
+  k4a_use_ir_checkbox = new QCheckBox(tr("Use IR instead of RGB colors"));
+  k4a_use_ir_checkbox->setChecked(config->k4a_use_ir);
+  k4a_layout->addWidget(k4a_use_ir_checkbox, row, 0, 1, 2);
+  ++ row;
 
   k4a_exposure_edit = new QLineEdit(QString::number(config->k4a_exposure));
-  add_option(tr("Set exposure in ms(8000)"), k4a_exposure_edit, k4a_layout, &row);
+  add_option(tr("RGB exposure time in us (0 for auto-exposure)"), k4a_exposure_edit, k4a_layout, &row);
 
   k4a_layout->setRowStretch(row, 1);
   k4a_tab->setLayout(k4a_layout);
@@ -745,11 +815,11 @@ bool SettingsDialog::ParseSettings() {
   // k4a settings
   // TODO Silvano error check
 #ifdef HAVE_K4A
-  config->k4a_mode = k4a_mode_edit->text().toStdString();
-  config->k4a_fps = k4a_fps_edit->text().toInt(&ok);
-  config->k4a_resolution = k4a_resolution_edit->text().toInt(&ok);
+  config->k4a_mode = k4a_mode_values[k4a_mode_combo->currentIndex()];
+  config->k4a_fps = k4a_fps_values[k4a_fps_combo->currentIndex()];
+  config->k4a_resolution = k4a_resolution_values[k4a_resolution_combo->currentIndex()];
   config->k4a_factor = k4a_factor_edit->text().toInt(&ok);
-  config->k4a_use_depth = k4a_use_depth_edit->text().toInt(&ok);
+  config->k4a_use_ir = k4a_use_ir_checkbox->isChecked();
   config->k4a_exposure = k4a_exposure_edit->text().toInt(&ok);
 #endif
   

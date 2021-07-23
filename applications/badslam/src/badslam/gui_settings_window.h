@@ -134,11 +134,14 @@ class SettingsDialog : public QDialog {
   QLineEdit* structure_visible_exposure_time_edit;
   
   // K4A settings
-  QLineEdit* k4a_mode_edit;
-  QLineEdit* k4a_fps_edit;
-  QLineEdit* k4a_resolution_edit;
+  QComboBox* k4a_mode_combo;
+  vector<string> k4a_mode_values;
+  QComboBox* k4a_fps_combo;
+  vector<int> k4a_fps_values;
+  QComboBox* k4a_resolution_combo;
+  vector<int> k4a_resolution_values;
   QLineEdit* k4a_factor_edit;
-  QLineEdit* k4a_use_depth_edit;
+  QCheckBox* k4a_use_ir_checkbox;
   QLineEdit* k4a_exposure_edit;
   
   BadSlamConfig* config;

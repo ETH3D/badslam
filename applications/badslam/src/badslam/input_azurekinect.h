@@ -80,7 +80,7 @@ class K4AInputThread {
   //                   be stored.
   // @param depth_scaling Output parameter in which the depth scaling will be returned:
   //                      recorded_depth = depth_scaling * depth_in_meters
-  void Start(RGBDVideo<Vec3u8, u16>* rgbd_video, float* depth_scaling, int fps, int resolution, int _factor, int use_depth, string mode, int exposure);
+  void Start(RGBDVideo<Vec3u8, u16>* rgbd_video, float* depth_scaling, int fps, int resolution, int _factor, bool use_ir, string mode, int exposure);
   
   // Retrieves the next input frame and stores it in the RGBDVideo given to the
   // constructor. Blocks while no new input frame is available.
@@ -92,11 +92,11 @@ class K4AInputThread {
   void init_undistortion_map();
   bool decode_image_opencv(
       const k4a_image_t & color_image,
-      k4a_image_t * uncompressed_color_image, 
+      k4a_image_t * uncompressed_color_image,
       cv::Mat & decodedImage);
 
-  bool transform_depth_to_color(const k4a_transformation_t & transformation_handle, 
-      const k4a_image_t & depth_image, 
+  bool transform_depth_to_color(const k4a_transformation_t & transformation_handle,
+      const k4a_image_t & depth_image,
       k4a_image_t * transformed_image);
 
   bool undistort_depth_and_rgb(k4a_calibration_intrinsic_parameters_t & intrinsics,
@@ -129,7 +129,7 @@ class K4AInputThread {
   int height;
 
   float factor{ 1.0 }; // scaling factor
-  bool use_depth{ false };
+  bool use_ir{ false };
   cv::Mat cv_undistorted_color;
   cv::Mat cv_undistorted_depth;
   cv::Mat cv_undistorted_color_noalpha;
@@ -154,17 +154,17 @@ class K4AInputThread {
 #else
 
 // Dummy version of K4AInputThread which replaces the actual version in
-// case the program is compiled without librealsense2. Asserts if any of its
+// case the program is compiled without K4A. Asserts if any of its
 // functions are called.
 class K4AInputThread {
  public:
-  void Start(RGBDVideo<Vec3u8, u16>* rgbd_video, float* depth_scaling, int fps, int resolution, int _factor, int use_depth, string mode, int exposure) {
+  void Start(RGBDVideo<Vec3u8, u16>* rgbd_video, float* depth_scaling, int fps, int resolution, int _factor, bool use_ir, string mode, int exposure) {
     (void) rgbd_video;
     (void) depth_scaling;
     (void) fps;
     (void) resolution;
     (void) _factor;
-    (void) use_depth;
+    (void) use_ir;
     (void) mode;
     (void) exposure;
     LOG(FATAL) << "Azure Kinect input requested, but the program was compiled without Azure Kinect support.";

@@ -356,11 +356,11 @@ struct BadSlamConfig {
   static constexpr const char* k4a_factor_help = "Downscaling factor for Azure kinect images";
   int k4a_factor = 1;
   
-  static constexpr const char* k4a_use_depth_help = "When using this mode only the depth image plus reflectivity is used, without rgb";
-  int k4a_use_depth = 0;
+  static constexpr const char* k4a_use_ir_help = "When enabled, the IR reflectivity images are used for color instead of the RGB images";
+  bool k4a_use_ir;
   
-  static constexpr const char* k4a_exposure_help = "Exposure for the rgb camera of Azure Kinect, default is 8000ms when 0 it's auto";
-  int k4a_exposure = 8000;
+  static constexpr const char* k4a_exposure_help = "Exposure for the RGB camera of the Azure Kinect, default is 8000us, 0 is auto-exposure";
+  int k4a_exposure = 0;
   
   
   inline float GetLoopDetectionImageFrequency() const {
