@@ -438,11 +438,13 @@ u32 CreateSurfelsForKeyframeCUDA_CountNewSurfels(
     CUDABuffer_<u8>* new_surfel_flag_vector,
     CUDABuffer_<u32>* new_surfel_indices) {
   // Indices for the new surfels are computed with a parallel inclusive prefix sum from CUB.
+  cub::TransformInputIterator<u32, TypeConversionOp<u32>, const u8*> new_surfel_flag_vector_as_u32(new_surfel_flag_vector->address(), TypeConversionOp<u32>());
+  
   if (*new_surfels_temp_storage_bytes == 0) {
     cub::DeviceScan::InclusiveSum(
         *new_surfels_temp_storage,
         *new_surfels_temp_storage_bytes,
-        new_surfel_flag_vector->address(),
+        new_surfel_flag_vector_as_u32,
         new_surfel_indices->address(),
         pixel_count,
         stream);
@@ -453,7 +455,7 @@ u32 CreateSurfelsForKeyframeCUDA_CountNewSurfels(
   cub::DeviceScan::InclusiveSum(
       *new_surfels_temp_storage,
       *new_surfels_temp_storage_bytes,
-      new_surfel_flag_vector->address(),
+      new_surfel_flag_vector_as_u32,
       new_surfel_indices->address(),
       pixel_count,
       stream);

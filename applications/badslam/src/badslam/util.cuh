@@ -41,6 +41,22 @@
 
 namespace vis {
 
+/// Type conversion operator for CUB.
+///
+/// Used to convert input types such as u8 to for example u32 for device scans
+/// in order to force CUB's internal accumulator variable(s) to have this type, preventing overflows.
+///
+/// Use within a TransformInputIterator like this:
+///   cub::TransformInputIterator<TargetT, TypeConversionOp<TargetT>, const InputT*> inIt(src, TypeConversionOp<TargetT>());
+template <typename TargetT>
+struct TypeConversionOp {
+  template <typename InputT>
+  __forceinline__ __host__ __device__
+  TargetT operator()(const InputT& v) const {
+    return static_cast<TargetT>(v);
+  }
+};
+
 // Converts raw (measured) depth values to calibrated depth values, given the
 // depth deformation parameters and the raw-to-metric depth factor.
 __forceinline__ __host__ __device__ float RawToCalibratedDepth(
