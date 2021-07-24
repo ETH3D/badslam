@@ -431,6 +431,11 @@ int LIBVIS_QT_MAIN(int argc, char** argv) {
       &bad_slam_config.k4a_exposure, /*required*/ false,
       bad_slam_config.k4a_exposure_help);
   
+  cmd_parser.NamedParameter(
+      "--k4a_record_path",
+      &bad_slam_config.k4a_record_path, /*required*/ false,
+      bad_slam_config.k4a_record_path_help);
+  
   
   // These sequential parameters must be specified last (in code).
   string dataset_folder_path;
@@ -546,8 +551,8 @@ int LIBVIS_QT_MAIN(int argc, char** argv) {
         bad_slam_config.k4a_factor,
         bad_slam_config.k4a_use_ir,
         bad_slam_config.k4a_mode,
-        bad_slam_config.k4a_exposure
-    );
+        bad_slam_config.k4a_exposure,
+        bad_slam_config.k4a_record_path.c_str());
     live_input = 2;
   } else {
     if (!ReadTUMRGBDDatasetAssociatedAndCalibrated(

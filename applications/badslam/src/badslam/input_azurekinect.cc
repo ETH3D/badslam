@@ -31,6 +31,8 @@
 
 #ifdef HAVE_K4A
 
+#include <k4arecord/record.h>
+
 namespace vis {
 
 K4AInputThread::~K4AInputThread() {
@@ -267,11 +269,17 @@ void K4AInputThread::Start(
     RGBDVideo<Vec3u8, u16>* rgbd_video,
     float* depth_scaling,
     const string& dataset_path,
-    int fps, int resolution, int _factor,
-    bool _use_ir, string mode, int exposure) {
+    int fps,
+    int resolution,
+    int _factor,
+    bool _use_ir,
+    string mode,
+    int exposure,
+    const char* _record_path) {
     factor = _factor;
     rgbd_video_ = rgbd_video;
     use_ir = _use_ir;
+    record_path = _record_path;
 
     uint32_t device_count = k4a_device_get_installed_count();
     if (device_count == 0) {
@@ -307,9 +315,25 @@ void K4AInputThread::Start(
 
     if (device) {
       if (K4A_RESULT_SUCCEEDED != k4a_device_start_cameras(device, &config)) {
-          LOG(FATAL) << "Failed to start K4A device cameras!";
+        LOG(FATAL) << "Failed to start K4A device cameras!";
       }
-  
+      if (!record_path.empty()) {
+        if (K4A_RESULT_SUCCEEDED != k4a_device_start_imu(device)) {
+          LOG(FATAL) << "Failed to start K4A device IMU!";
+        }
+        
+        if (K4A_FAILED(k4a_record_create(record_path.c_str(), device, config, &recording))) {
+          LOG(FATAL) << "Unable to create recording file: " << record_path << std::endl;
+        }
+        
+        if (K4A_RESULT_SUCCEEDED != k4a_record_add_imu_track(recording)) {
+          LOG(FATAL) << "k4a_record_add_imu_track failed!";
+        }
+        if (K4A_RESULT_SUCCEEDED != k4a_record_write_header(recording)) {
+          LOG(FATAL) << "k4a_record_write_header failed!";
+        }
+      }
+      
       if (K4A_RESULT_SUCCEEDED !=
           k4a_device_get_calibration(device, config.depth_mode, config.color_resolution, &calibration)) {
           LOG(FATAL) << "Failed to get calibration for K4A device!";
@@ -678,7 +702,45 @@ void K4AInputThread::ThreadMain() {
     if (k4a_depth_image) {
       k4a_image_release(k4a_depth_image);
     }
+    
+    if (recording) {
+      if (K4A_RESULT_SUCCEEDED != k4a_record_write_capture(recording, capture)) {
+        LOG(ERROR) << "k4a_record_write_capture failed!";
+      }
+      
+      k4a_wait_result_t result;
+      do {
+        k4a_imu_sample_t sample;
+        result = k4a_device_get_imu_sample(device, &sample, 0);
+        if (result == K4A_WAIT_RESULT_TIMEOUT) {
+          break;
+        } else if (result != K4A_WAIT_RESULT_SUCCEEDED) {
+          std::cerr << "Runtime error: k4a_imu_get_sample() returned " << result << std::endl;
+          break;
+        }
+        
+        k4a_result_t write_result = k4a_record_write_imu_sample(recording, sample);
+        if (K4A_FAILED(write_result)) {
+          std::cerr << "Runtime error: k4a_record_write_imu_sample() returned " << write_result << std::endl;
+          break;
+        }
+      } while (result != K4A_WAIT_RESULT_FAILED);
+    }
+    
     k4a_capture_release(capture);
+  }
+  
+  if (recording) {
+    k4a_device_stop_imu(device);
+  }
+  k4a_device_stop_cameras(device);
+  
+  if (recording) {
+    if (K4A_RESULT_SUCCEEDED != k4a_record_flush(recording)) {
+      LOG(ERROR) << "k4a_record_flush failed!";
+    }
+    k4a_record_close(recording);
+    recording = nullptr;
   }
   
   if (device) {

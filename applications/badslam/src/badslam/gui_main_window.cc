@@ -1579,7 +1579,8 @@ void MainWindow::WorkerThreadMain() {
         config_.k4a_factor,
         config_.k4a_use_ir,
         config_.k4a_mode,
-        config_.k4a_exposure);
+        config_.k4a_exposure,
+        config_.k4a_record_path.c_str());
     live_input = 2;
   } else {
     if (!ReadTUMRGBDDatasetAssociatedAndCalibrated(

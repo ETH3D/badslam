@@ -80,7 +80,7 @@ class K4AInputThread {
   //                   be stored.
   // @param depth_scaling Output parameter in which the depth scaling will be returned:
   //                      recorded_depth = depth_scaling * depth_in_meters
-  void Start(RGBDVideo<Vec3u8, u16>* rgbd_video, float* depth_scaling, const string& dataset_path, int fps, int resolution, int _factor, bool use_ir, string mode, int exposure);
+  void Start(RGBDVideo<Vec3u8, u16>* rgbd_video, float* depth_scaling, const string& dataset_path, int fps, int resolution, int _factor, bool use_ir, string mode, int exposure, const char* record_path);
   
   // Retrieves the next input frame and stores it in the RGBDVideo given to the
   // constructor. Blocks while no new input frame is available.
@@ -139,6 +139,9 @@ class K4AInputThread {
   cv::Mat map1;
   cv::Mat map2;
   
+  string record_path;
+  k4a_record_t recording = nullptr;
+  
   atomic<bool> exit_;
   
   // The pipeline should not be allocated unless it is actually used. When that
@@ -159,7 +162,7 @@ class K4AInputThread {
 // functions are called.
 class K4AInputThread {
  public:
-  void Start(RGBDVideo<Vec3u8, u16>* rgbd_video, float* depth_scaling, const string& dataset_path, int fps, int resolution, int _factor, bool use_ir, string mode, int exposure) {
+  void Start(RGBDVideo<Vec3u8, u16>* rgbd_video, float* depth_scaling, const string& dataset_path, int fps, int resolution, int _factor, bool use_ir, string mode, int exposure, const char* record_path) {
     (void) rgbd_video;
     (void) depth_scaling;
     (void) dataset_path;
@@ -169,6 +172,7 @@ class K4AInputThread {
     (void) use_ir;
     (void) mode;
     (void) exposure;
+    (void) record_path;
     LOG(FATAL) << "Azure Kinect input requested, but the program was compiled without Azure Kinect support.";
   }
   

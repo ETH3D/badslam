@@ -362,6 +362,9 @@ struct BadSlamConfig {
   static constexpr const char* k4a_exposure_help = "Exposure for the RGB camera of the Azure Kinect, default is 8000us, 0 is auto-exposure";
   int k4a_exposure = 0;
   
+  static constexpr const char* k4a_record_path_help = "Path to a .mkv file that will be recorded simultaneously to SLAM";
+  string k4a_record_path = "";
+  
   
   inline float GetLoopDetectionImageFrequency() const {
     return (loop_detection_image_frequency != 0) ?

@@ -495,15 +495,18 @@ SettingsDialog::SettingsDialog(QString* dataset_path, BadSlamConfig* config, boo
   ++ row;
 
   k4a_factor_edit = new QLineEdit(QString::number(config->k4a_factor));
-  add_option(tr("Downscaling factor"), k4a_factor_edit, k4a_layout, &row);
+  add_option(tr("Downscaling factor: "), k4a_factor_edit, k4a_layout, &row);
 
-  k4a_use_ir_checkbox = new QCheckBox(tr("Use IR instead of RGB colors"));
+  k4a_use_ir_checkbox = new QCheckBox(tr("Use IR instead of RGB colors (this way, the full depth camera FOV will be used)"));
   k4a_use_ir_checkbox->setChecked(config->k4a_use_ir);
   k4a_layout->addWidget(k4a_use_ir_checkbox, row, 0, 1, 2);
   ++ row;
 
   k4a_exposure_edit = new QLineEdit(QString::number(config->k4a_exposure));
-  add_option(tr("RGB exposure time in us (0 for auto-exposure)"), k4a_exposure_edit, k4a_layout, &row);
+  add_option(tr("RGB exposure time in us (0 for auto-exposure): "), k4a_exposure_edit, k4a_layout, &row);
+
+  k4a_record_path_edit = new QLineEdit(QString::fromStdString(config->k4a_record_path));
+  add_option(tr("Path to an .mkv file to record: "), k4a_record_path_edit, k4a_layout, &row);
 
   k4a_layout->setRowStretch(row, 1);
   k4a_tab->setLayout(k4a_layout);
@@ -814,7 +817,6 @@ bool SettingsDialog::ParseSettings() {
   
   
   // k4a settings
-  // TODO Silvano error check
 #ifdef HAVE_K4A
   config->k4a_mode = k4a_mode_values[k4a_mode_combo->currentIndex()];
   config->k4a_fps = k4a_fps_values[k4a_fps_combo->currentIndex()];
@@ -822,6 +824,7 @@ bool SettingsDialog::ParseSettings() {
   config->k4a_factor = k4a_factor_edit->text().toInt(&ok);
   config->k4a_use_ir = k4a_use_ir_checkbox->isChecked();
   config->k4a_exposure = k4a_exposure_edit->text().toInt(&ok);
+  config->k4a_record_path = k4a_record_path_edit->text().toStdString();
 #endif
   
   return true;

@@ -143,6 +143,7 @@ class SettingsDialog : public QDialog {
   QLineEdit* k4a_factor_edit;
   QCheckBox* k4a_use_ir_checkbox;
   QLineEdit* k4a_exposure_edit;
+  QLineEdit* k4a_record_path_edit;
   
   BadSlamConfig* config;
   bool* start_paused;
