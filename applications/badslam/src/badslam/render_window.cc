@@ -43,6 +43,7 @@
 #include <libvis/cuda/cuda_util.h>
 #include <libvis/render_window_qt_opengl.h>
 
+#undef None
 #include "badslam/kernels.h"
 #include "badslam/direct_ba.h"
 #include "badslam/util.cuh"
