@@ -114,6 +114,9 @@ SettingsDialog::SettingsDialog(QString* dataset_path, BadSlamConfig* config, boo
     ++ *row;
   };
   
+  bool found;
+  (void) found;
+  
   
   // Settings tab: Dataset playback
   QWidget* dataset_playback_tab = new QWidget();
@@ -347,7 +350,7 @@ SettingsDialog::SettingsDialog(QString* dataset_path, BadSlamConfig* config, boo
   structure_depth_range_values.push_back("VeryLong");
   structure_depth_range_combo->addItem(tr("Hybrid (0.35m to 10.0m)"));
   structure_depth_range_values.push_back("Hybrid");
-  bool found = false;
+  found = false;
   for (usize i = 0; i < structure_depth_range_values.size(); ++ i) {
     if (config->structure_depth_range == structure_depth_range_values[i]) {
       structure_depth_range_combo->setCurrentIndex(i);
