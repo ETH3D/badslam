@@ -69,7 +69,7 @@ find_package(Threads REQUIRED)
 find_package(OpenGL REQUIRED)
 
 # Eigen (external)
-find_package(Eigen3 REQUIRED)
+find_package(Eigen3 REQUIRED NO_MODULE)
 
 # Boost (external)
 if (POLICY CMP0074) # get rid of annoying warning
