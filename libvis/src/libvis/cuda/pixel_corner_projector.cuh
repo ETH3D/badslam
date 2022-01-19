@@ -145,8 +145,8 @@ struct PixelCornerProjector_ {
     float2 undistorted_nxy = make_float2(position.x / position.z,
                                          position.y / position.z);
     
-    float fc = (undistorted_nxy.x - min_nx) * ((resolution_x - 1) / (max_nx - min_nx));
-    float fr = (undistorted_nxy.y - min_ny) * ((resolution_y - 1) / (max_ny - min_ny));
+    double fc = (undistorted_nxy.x - min_nx) * ((resolution_x - 1) / (max_nx - min_nx));
+    double fr = (undistorted_nxy.y - min_ny) * ((resolution_y - 1) / (max_ny - min_ny));
     const int row = ::floor(fr);
     const int col = ::floor(fc);
     float r_frac = fr - row;
