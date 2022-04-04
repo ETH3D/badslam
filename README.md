@@ -276,6 +276,24 @@ when optimizing the depth camera's deformation, which lacks synchronization for 
 Thus, to possibly increase robustness, use the `--sequential_ba` parameter.
 Live operation may still be simulated by also specifying `--target_frame_rate <desired_fps>`.
 
+### Docker ###
+To build the image, do:
+
+```
+$ docker build  -t eth3d/badslam .
+```
+
+To run the image using an example dataset, invoke:
+
+```
+$ docker run  --gpus all -it -e DISPLAY  -v /tmp/.X11-unix:/tmp/.X11-unix:ro  eth3d/badslam  /bin/bash
+```
+
+and:
+
+```
+$ ./applications/badslam/badslam /datasets/einstein_1 --export_reconstruction einstein.ply && meshlab einstein.ply
+```
 
 ## Extending BAD SLAM ##
 
