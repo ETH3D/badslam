@@ -72,7 +72,7 @@ WORKDIR DLib
 RUN git reset --hard b6c28fb
 RUN mkdir build
 WORKDIR build
-RUN cmake -E env CXXFLAGS="-march=native" cmake .. && make install
+RUN cmake -E env CXXFLAGS="-march=native" cmake .. && make -j install
 WORKDIR /
 
 RUN git clone https://github.com/laurentkneip/opengv.git
@@ -90,14 +90,10 @@ RUN mkdir build
 WORKDIR build
 RUN cmake -DBUILD_WITH_MARCH_NATIVE=ON .. && make -j install
 
-WORKDIR /datasets
-RUN wget https://www.eth3d.net/data/slam/datasets/einstein_1_mono.zip
-RUN wget https://www.eth3d.net/data/slam/datasets/einstein_1_rgbd.zip
-RUN unzip einstein_1_mono.zip
-RUN unzip einstein_1_rgbd.zip
-
 ADD . /home/badslam
 RUN mkdir build_RelWithDebInfo
 WORKDIR /home/badslam/build_RelWithDebInfo
 
-RUN cmake -E env CXXFLAGS="-march=native" cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_CUDA_FLAGS="-arch=sm_61" .. && make -j
+ARG CUDA_ARCH
+ENV CUDA_ARCH ${CUDA_ARCH}
+RUN cmake -E env CXXFLAGS='-march=native' cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_CUDA_FLAGS="-arch=${CUDA_ARCH}" .. && make -j

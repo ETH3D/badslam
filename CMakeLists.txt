@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.6...3.14)
 project(libvis LANGUAGES C CXX)
 
-
 # Enable C++14 globally
 set(CMAKE_CXX_STANDARD 14)
 
