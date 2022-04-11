@@ -276,7 +276,7 @@ when optimizing the depth camera's deformation, which lacks synchronization for 
 Thus, to possibly increase robustness, use the `--sequential_ba` parameter.
 Live operation may still be simulated by also specifying `--target_frame_rate <desired_fps>`.
 
-### Docker ###
+## Docker ##
 To build the image, do:
 
 ```
@@ -284,9 +284,9 @@ $ docker build  --build-arg CUDA_ARCH="DESIRED_ARCH" -t eth3d/badslam .
 ```
 
 where `DESIRED_ARCH` corresponds to the CUDA architecture you wish to build
-with.
+with (for example: `sm_61`).
 
-To run the image using an example dataset, download & unzip invoke:
+To run the image using an example dataset, download & unzip the dataset, then invoke:
 
 ```
 $ docker run  --gpus all -it -e DISPLAY  -v /tmp/.X11-unix:/tmp/.X11-unix:ro  --mount type=bind,source=ABSOLUTE_PATH_TO_DATASET,target=/datasets eth3d/badslam  /bin/bash
