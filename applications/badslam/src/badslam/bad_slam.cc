@@ -44,6 +44,10 @@
 #include "badslam/util.cuh"
 #include "badslam/util.h"
 
+#ifdef WIN32
+#include <windows.h>
+#endif
+
 namespace vis {
 
 BadSlam::BadSlam(
