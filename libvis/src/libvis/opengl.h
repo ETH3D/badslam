@@ -36,9 +36,6 @@
 #include "libvis/logging.h"
 
 #include "libvis/libvis.h"
-#ifdef WIN32
-#include <windows.h>
-#endif
 
 #ifdef ANDROID
 #include <EGL/egl.h>
