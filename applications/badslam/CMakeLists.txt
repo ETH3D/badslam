@@ -112,10 +112,7 @@ if (CMAKE_CUDA_COMPILER)
     )
   endif()
   if (realsense2_FOUND)
-    target_compile_options(badslam_baselib
-      PRIVATE
-        $<$<COMPILE_LANGUAGE:CXX>:-DBAD_SLAM_HAVE_REALSENSE>
-    )
+    target_compile_options(badslam_baselib PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-DBAD_SLAM_HAVE_REALSENSE>)
   endif()
 
   if (WIN32)
