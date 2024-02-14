@@ -28,7 +28,15 @@ RUN apt update && apt-get -qq install -y --no-install-recommends \
         libqt5x11extras5-dev\
         libqt5opengl5-dev   \
         libsuitesparse-dev  \
-        meshlab
+        meshlab             \
+        mesa-utils          \
+        vainfo              \
+        mesa-va-drivers
+
+# nvidia-container-runtime
+ENV NVIDIA_VISIBLE_DEVICES ${NVIDIA_VISIBLE_DEVICES:-all}
+ENV NVIDIA_DRIVER_CAPABILITIES ${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}graphics
+ENV MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA
 
 RUN wget https://www.python.org/ftp/python/3.9.9/Python-3.9.9.tgz
 RUN tar xzvf Python-3.9.9.tgz
